@@ -1,0 +1,119 @@
+# --------------------------------------
+# 导航栏设置
+# --------------------------------------
+nav:
+  logo:
+  display_title: true
+  fixed: false
+
+menu:
+  首页: / || fas fa-home
+  时光档案: /archives/ || fas fa-archive
+  标签: /tags/ || fas fa-tags
+  分类: /categories/ || fas fa-folder-open
+  List||fas fa-list:
+    Music: /music/ || fas fa-music
+    Movie: /movies/ || fas fa-video
+  友链: /link/ || fas fa-link
+  关于: /about/ || fas fa-heart
+
+# --------------------------------------
+# 社交链接
+# --------------------------------------
+social:
+  fab fa-github: https://github.com/jiege56 || Github || '#24292e'
+  fas fa-envelope: mailto:1977691073@qq.com || Email || '#4a7dbe'
+
+# --------------------------------------
+# 图片设置
+# --------------------------------------
+favicon: /img/favicon.jpg
+
+avatar:
+  img: /img/111.jpg
+  effect: true
+
+# 顶部横幅图片
+default_top_img: https://s.panlai.com/zb_users/upload/2025/03/bizhihui_com_202503251742906624124197.jpg-arthumbs
+index_img: https://s.panlai.com/zb_users/upload/2025/03/bizhihui_com_202503251742906624124197.jpg-arthumbs
+archive_img: https://s.panlai.com/zb_users/upload/2025/03/bizhihui_com_202503251742906624124197.jpg-arthumbs
+tag_img: https://s.panlai.com/zb_users/upload/2025/03/bizhihui_com_202503251742906624124197.jpg-arthumbs
+category_img: https://s.panlai.com/zb_users/upload/2025/03/bizhihui_com_202503251742906624124197.jpg-arthumbs
+
+# 网站背景
+background: https://s.panlai.com/zb_users/upload/2025/03/bizhihui_com_202503251742906624124197.jpg-arthumbs
+
+# Footer 背景
+footer_img: https://s.panlai.com/zb_users/upload/2025/03/bizhihui_com_202503251742906624124197.jpg-arthumbs
+
+# --------------------------------------
+# 文章封面
+# --------------------------------------
+cover:
+  index_enable: true
+  aside_enable: true
+  archives_enable: true
+  position: both
+  default_cover: https://s.panlai.com/zb_users/upload/2025/03/bizhihui_com_202503251742906624124197.jpg-arthumbs
+
+# --------------------------------------
+# 公告
+# --------------------------------------
+card_announcement:
+  enable: true
+  content: This is my Blog
+
+# --------------------------------------
+# 网站信息
+# --------------------------------------
+site_info:
+  owner: 杰哥
+  subtitle: 人性背后是白云苍狗，愿你我都做生活的高手
+  description: 人性背后是白云苍狗，愿你我都做生活的高手
+
+# --------------------------------------
+# 页脚
+# --------------------------------------
+footer:
+  owner:
+    enable: true
+    since: 2025
+  custom_text:
+  copyright: true
+
+# --------------------------------------
+# 代码高亮
+# --------------------------------------
+highlight_theme: mac
+
+# --------------------------------------
+# 右侧设置按钮
+# --------------------------------------
+rightside:
+  readmode: true
+  aside: true
+  darkmode: true
+
+# --------------------------------------
+# 字数统计/阅读时长
+# --------------------------------------
+wordcount:
+  enable: false
+
+# --------------------------------------
+# 文章元数据
+# --------------------------------------
+post_meta:
+  page:
+    date_type: created
+    categories: true
+    tags: true
+    label: true
+
+# --------------------------------------
+# Live2D 看板娘
+# --------------------------------------
+inject:
+  bottom:
+    - '<script src="/live2dw/lib/L2Dwidget.min.js?094cbace49a39548bed64abff5988b05"></script>'
+    - '<script>L2Dwidget.init({"model":{"jsonPath":"live2d-widget-model-haruto"},"display":{"position":"right","width":150,"height":300},"mobile":{"show":true},"log":false,"pluginJsPath":"lib/","pluginModelPath":"assets/","pluginRootPath":"live2dw/","tagMode":false});</script>'
