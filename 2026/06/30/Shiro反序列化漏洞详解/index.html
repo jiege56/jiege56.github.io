@@ -1,0 +1,264 @@
+<!DOCTYPE html><html lang="zh-CN" data-theme="light"><head><meta charset="UTF-8"><meta http-equiv="X-UA-Compatible" content="IE=edge"><meta name="viewport" content="width=device-width, initial-scale=1.0,viewport-fit=cover"><title>Shiro反序列化漏洞详解 | 拾憶</title><meta name="author" content="杰哥"><meta name="copyright" content="杰哥"><meta name="format-detection" content="telephone=no"><meta name="theme-color" content="#ffffff"><meta name="description" content="序列化1. Shiro框架的基本功能与架构Apache Shiro 是一个强大的 Java 安全框架，它提供了**认证（Authentication）、授权（Authorization）、加密（Cryptography）和会话管理（Session Management）**四大核心功能。Shiro 的目标是简化安全机制的实现，使得开发者可以快速、便捷地为任何规模的应用程序（从最小的移动应用到最大的">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Shiro反序列化漏洞详解">
+<meta property="og:url" content="https://jiege56.github.io/2026/06/30/Shiro%E5%8F%8D%E5%BA%8F%E5%88%97%E5%8C%96%E6%BC%8F%E6%B4%9E%E8%AF%A6%E8%A7%A3/index.html">
+<meta property="og:site_name" content="拾憶">
+<meta property="og:description" content="序列化1. Shiro框架的基本功能与架构Apache Shiro 是一个强大的 Java 安全框架，它提供了**认证（Authentication）、授权（Authorization）、加密（Cryptography）和会话管理（Session Management）**四大核心功能。Shiro 的目标是简化安全机制的实现，使得开发者可以快速、便捷地为任何规模的应用程序（从最小的移动应用到最大的">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://s.panlai.com/zb_users/upload/2025/03/bizhihui_com_202503251742906624124197.jpg-arthumbs">
+<meta property="article:published_time" content="2026-06-30T08:00:00.000Z">
+<meta property="article:modified_time" content="2026-06-30T14:26:16.453Z">
+<meta property="article:author" content="杰哥">
+<meta property="article:tag" content="Java安全">
+<meta property="article:tag" content="Shiro">
+<meta property="article:tag" content="反序列化">
+<meta property="article:tag" content="安全研究">
+<meta property="article:tag" content="漏洞分析">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://s.panlai.com/zb_users/upload/2025/03/bizhihui_com_202503251742906624124197.jpg-arthumbs"><script type="application/ld+json">{
+  "@context": "https://schema.org",
+  "@type": "BlogPosting",
+  "headline": "Shiro反序列化漏洞详解",
+  "url": "https://jiege56.github.io/2026/06/30/Shiro%E5%8F%8D%E5%BA%8F%E5%88%97%E5%8C%96%E6%BC%8F%E6%B4%9E%E8%AF%A6%E8%A7%A3/",
+  "image": "https://s.panlai.com/zb_users/upload/2025/03/bizhihui_com_202503251742906624124197.jpg-arthumbs",
+  "datePublished": "2026-06-30T08:00:00.000Z",
+  "dateModified": "2026-06-30T14:26:16.453Z",
+  "author": [
+    {
+      "@type": "Person",
+      "name": "杰哥",
+      "url": "https://jiege56.github.io"
+    }
+  ]
+}</script><link rel="shortcut icon" href="/img/favicon.png"><link rel="canonical" href="https://jiege56.github.io/2026/06/30/Shiro%E5%8F%8D%E5%BA%8F%E5%88%97%E5%8C%96%E6%BC%8F%E6%B4%9E%E8%AF%A6%E8%A7%A3/index.html"><link rel="preconnect" href="//cdn.jsdelivr.net"/><link rel="preconnect" href="//busuanzi.ibruce.info"/><link rel="stylesheet" href="/css/index.css?v=5.5.5"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@7.2.0/css/all.min.css"><script>
+    (() => {
+      
+    const saveToLocal = {
+      set: (key, value, ttl) => {
+        if (!ttl) return
+        const expiry = Date.now() + ttl * 86400000
+        localStorage.setItem(key, JSON.stringify({ value, expiry }))
+      },
+      get: key => {
+        const itemStr = localStorage.getItem(key)
+        if (!itemStr) return undefined
+        const { value, expiry } = JSON.parse(itemStr)
+        if (Date.now() > expiry) {
+          localStorage.removeItem(key)
+          return undefined
+        }
+        return value
+      }
+    }
+
+    window.btf = {
+      saveToLocal,
+      getScript: (url, attr = {}) => new Promise((resolve, reject) => {
+        const script = document.createElement('script')
+        script.src = url
+        script.async = true
+        Object.entries(attr).forEach(([key, val]) => script.setAttribute(key, val))
+        script.onload = script.onreadystatechange = () => {
+          if (!script.readyState || /loaded|complete/.test(script.readyState)) resolve()
+        }
+        script.onerror = reject
+        document.head.appendChild(script)
+      }),
+      getCSS: (url, id) => new Promise((resolve, reject) => {
+        const link = document.createElement('link')
+        link.rel = 'stylesheet'
+        link.href = url
+        if (id) link.id = id
+        link.onload = link.onreadystatechange = () => {
+          if (!link.readyState || /loaded|complete/.test(link.readyState)) resolve()
+        }
+        link.onerror = reject
+        document.head.appendChild(link)
+      }),
+      addGlobalFn: (key, fn, name = false, parent = window) => {
+        if (!false && key.startsWith('pjax')) return
+        const globalFn = parent.globalFn || {}
+        globalFn[key] = globalFn[key] || {}
+        globalFn[key][name || Object.keys(globalFn[key]).length] = fn
+        parent.globalFn = globalFn
+      }
+    }
+  
+      
+      const activateDarkMode = () => {
+        document.documentElement.setAttribute('data-theme', 'dark')
+        if (document.querySelector('meta[name="theme-color"]') !== null) {
+          document.querySelector('meta[name="theme-color"]').setAttribute('content', '#0d0d0d')
+        }
+      }
+      const activateLightMode = () => {
+        document.documentElement.setAttribute('data-theme', 'light')
+        if (document.querySelector('meta[name="theme-color"]') !== null) {
+          document.querySelector('meta[name="theme-color"]').setAttribute('content', '#ffffff')
+        }
+      }
+
+      btf.activateDarkMode = activateDarkMode
+      btf.activateLightMode = activateLightMode
+
+      const theme = saveToLocal.get('theme')
+    
+          theme === 'dark' ? activateDarkMode() : theme === 'light' ? activateLightMode() : null
+        
+      
+      const asideStatus = saveToLocal.get('aside-status')
+      if (asideStatus !== undefined) {
+        document.documentElement.classList.toggle('hide-aside', asideStatus === 'hide')
+      }
+    
+      
+    const detectApple = () => {
+      if (/iPad|iPhone|iPod|Macintosh/.test(navigator.userAgent)) {
+        document.documentElement.classList.add('apple')
+      }
+    }
+    detectApple()
+  
+    })()
+  </script><script>const GLOBAL_CONFIG = {
+  root: '/',
+  algolia: undefined,
+  localSearch: undefined,
+  translate: undefined,
+  highlight: {"plugin":"highlight.js","highlightCopy":true,"highlightLang":true,"highlightHeightLimit":false,"highlightFullpage":false,"highlightMacStyle":false},
+  copy: {
+    success: '复制成功',
+    error: '复制失败',
+    noSupport: '浏览器不支持'
+  },
+  relativeDate: {
+    homepage: false,
+    post: false
+  },
+  runtime: '',
+  dateSuffix: {
+    just: '刚刚',
+    min: '分钟前',
+    hour: '小时前',
+    day: '天前',
+    month: '个月前'
+  },
+  copyright: undefined,
+  lightbox: 'null',
+  Snackbar: undefined,
+  infinitegrid: {
+    js: 'https://cdn.jsdelivr.net/npm/@egjs/infinitegrid@4.13.0/dist/infinitegrid.min.js',
+    buttonText: '加载更多'
+  },
+  isPhotoFigcaption: false,
+  islazyloadPlugin: false,
+  isAnchor: false,
+  percent: {
+    toc: true,
+    rightside: false,
+  },
+  autoDarkmode: false
+}</script><script id="config-diff">var GLOBAL_CONFIG_SITE = {
+  title: 'Shiro反序列化漏洞详解',
+  isHighlightShrink: false,
+  isToc: true,
+  pageType: 'post'
+}</script></head><body><div class="post" id="body-wrap"><header class="post-bg" id="page-header" style="background-image: url(https://s.panlai.com/zb_users/upload/2025/03/bizhihui_com_202503251742906624124197.jpg-arthumbs);"><nav id="nav"><span id="blog-info"><a class="nav-site-title" href="/"><span class="site-name">拾憶</span></a><a class="nav-page-title" href="/"><span class="site-name">Shiro反序列化漏洞详解</span><span class="site-name"><i class="fa-solid fa-circle-arrow-left"></i><span>  返回首页</span></span></a></span><div id="menus"></div></nav><div id="post-info"><h1 class="post-title">Shiro反序列化漏洞详解</h1><div id="post-meta"><div class="meta-firstline"><span class="post-meta-date"><i class="far fa-calendar-alt fa-fw post-meta-icon"></i><span class="post-meta-label">发表于</span><time class="post-meta-date-created" datetime="2026-06-30T08:00:00.000Z" title="发表于 2026-06-30 16:00:00">2026-06-30</time><span class="post-meta-separator">|</span><i class="fas fa-history fa-fw post-meta-icon"></i><span class="post-meta-label">更新于</span><time class="post-meta-date-updated" datetime="2026-06-30T14:26:16.453Z" title="更新于 2026-06-30 22:26:16">2026-06-30</time></span><span class="post-meta-categories"><span class="post-meta-separator">|</span><i class="fas fa-inbox fa-fw post-meta-icon"></i><a class="post-meta-categories" href="/categories/%E5%AE%89%E5%85%A8%E7%A0%94%E7%A9%B6/">安全研究</a></span></div><div class="meta-secondline"><span class="post-meta-separator">|</span><span class="post-meta-pv-cv" id="" data-flag-title=""><i class="far fa-eye fa-fw post-meta-icon"></i><span class="post-meta-label">浏览量:</span><span id="busuanzi_value_page_pv"><i class="fa-solid fa-spinner fa-spin"></i></span></span></div></div></div></header><main class="layout" id="content-inner"><div id="post"><article class="container post-content" id="article-container"><h1 id="序列化"><a href="#序列化" class="headerlink" title="序列化"></a>序列化</h1><h2 id="1-Shiro框架的基本功能与架构"><a href="#1-Shiro框架的基本功能与架构" class="headerlink" title="1. Shiro框架的基本功能与架构"></a>1. Shiro框架的基本功能与架构</h2><p>Apache Shiro 是一个强大的 Java 安全框架，它提供了**认证（Authentication）、授权（Authorization）、加密（Cryptography）和会话管理（Session Management）**四大核心功能。Shiro 的目标是简化安全机制的实现，使得开发者可以快速、便捷地为任何规模的应用程序（从最小的移动应用到最大的企业级 Web 应用）添加安全性。</p>
+<h2 id="2-核心模块详解"><a href="#2-核心模块详解" class="headerlink" title="2. 核心模块详解"></a>2. 核心模块详解</h2><h3 id="2-1-认证（Authentication）"><a href="#2-1-认证（Authentication）" class="headerlink" title="2.1 认证（Authentication）"></a>2.1 认证（Authentication）</h3><ul>
+<li>用户身份识别：通过用户名&#x2F;密码、token、第三方登录等方式验证用户。</li>
+<li>Subject API：提供 <code>Subject.login()</code> 方法进行登录操作。</li>
+<li>Realm 接口：用于连接外部数据源（如数据库、LDAP）进行身份验证。</li>
+</ul>
+<h3 id="2-2-授权（Authorization）"><a href="#2-2-授权（Authorization）" class="headerlink" title="2.2 授权（Authorization）"></a>2.2 授权（Authorization）</h3><ul>
+<li>权限控制：基于角色或权限字符串进行访问控制。</li>
+<li>支持声明式和编程式权限检查。</li>
+<li>示例方法：<code>subject.hasRole(&quot;admin&quot;)</code>、<code>subject.isPermitted(&quot;user:delete&quot;)</code></li>
+</ul>
+<h3 id="2-3-加密（Cryptography）"><a href="#2-3-加密（Cryptography）" class="headerlink" title="2.3 加密（Cryptography）"></a>2.3 加密（Cryptography）</h3><ul>
+<li>提供常见的加密算法封装，如 AES、MD5、SHA 等。</li>
+<li>支持 Base64 编码解码。</li>
+<li>用于保护敏感数据，例如记住我（RememberMe）功能中使用 AES 加密 cookie 数据。</li>
+</ul>
+<h3 id="2-4-会话管理（Session-Management）"><a href="#2-4-会话管理（Session-Management）" class="headerlink" title="2.4 会话管理（Session Management）"></a>2.4 会话管理（Session Management）</h3><ul>
+<li>跨平台支持：不仅适用于 Web 应用，也适用于非 Web 环境（如桌面应用、服务端）。</li>
+<li>提供 Session 接口，用于管理用户状态。</li>
+<li>支持集群环境下的分布式会话。</li>
+</ul>
+<h1 id="反序列化"><a href="#反序列化" class="headerlink" title="反序列化"></a>反序列化</h1><h2 id="3-Shiro的反序列化机制"><a href="#3-Shiro的反序列化机制" class="headerlink" title="3. Shiro的反序列化机制"></a>3. Shiro的反序列化机制</h2><p>Shiro 在会话管理和”记住我”（RememberMe）功能中广泛使用了对象的序列化与反序列化机制。其主要流程如下：</p>
+<h3 id="3-1-RememberMe-功能的实现流程"><a href="#3-1-RememberMe-功能的实现流程" class="headerlink" title="3.1 RememberMe 功能的实现流程"></a>3.1 RememberMe 功能的实现流程</h3><p>当用户启用”记住我”功能并成功登录后，Shiro 会将用户的主体信息（Principal）进行序列化，然后使用 AES 加密，并通过 Base64 编码生成一个 Cookie 值返回给客户端浏览器。</p>
+<p><strong>具体流程如下：</strong></p>
+<ol>
+<li>用户登录时选择”记住我”选项。</li>
+<li>Shiro 将 <code>Subject</code> 对象中的 Principal（即用户身份信息）进行序列化。</li>
+<li>使用 AES 加密该序列化后的字节流（默认使用硬编码的 key：<code>kPH+bIxk5D2deZiIxcaaaA==</code>）。</li>
+<li>对加密后的字节流进行 Base64 编码。</li>
+<li>将结果写入名为 <code>rememberMe</code> 的 Cookie 中返回给客户端。</li>
+</ol>
+<p><strong>当用户再次访问网站时，流程如下：</strong></p>
+<ol>
+<li>浏览器携带 <code>rememberMe</code> Cookie 发送请求。</li>
+<li>Shiro 从 Cookie 中提取值并进行 Base64 解码。</li>
+<li>使用相同的 AES 密钥进行解密。</li>
+<li>对解密后的字节流进行反序列化，恢复成 <code>Subject</code> 对象。</li>
+<li>自动完成用户身份识别，实现免登录访问。</li>
+</ol>
+<h2 id="漏洞成因"><a href="#漏洞成因" class="headerlink" title="漏洞成因"></a>漏洞成因</h2><p>Java 的序列化（Serialization）是指将对象转换为字节流以便于存储或传输的过程；而反序列化（Deserialization）则是将字节流还原为原始对象的过程。这一机制常用于网络通信、本地存储、会话保持等场景。</p>
+<p>然而，如果反序列化过程中的输入被攻击者控制，则可能导致严重的安全问题。Java 原生的反序列化机制（<code>java.io.ObjectInputStream.readObject()</code>）在处理对象时会自动调用对象的 <code>readObject()</code> 方法，若该方法中存在危险逻辑（如执行命令），则攻击者可以构造特定的恶意类来触发任意代码执行。</p>
+<h2 id="4-Shiro反序列化漏洞的触发条件"><a href="#4-Shiro反序列化漏洞的触发条件" class="headerlink" title="4. Shiro反序列化漏洞的触发条件"></a>4. Shiro反序列化漏洞的触发条件</h2><h3 id="4-1-触发版本范围"><a href="#4-1-触发版本范围" class="headerlink" title="4.1 触发版本范围"></a>4.1 触发版本范围</h3><ul>
+<li><strong>Apache Shiro &lt;&#x3D; 1.2.4</strong></li>
+<li><strong>受影响的依赖库</strong>：使用 Java 原生反序列化 + Apache Commons Collections（常见于早期版本）</li>
+</ul>
+<h3 id="4-2-漏洞原理总结"><a href="#4-2-漏洞原理总结" class="headerlink" title="4.2 漏洞原理总结"></a>4.2 漏洞原理总结</h3><ol>
+<li>Shiro 的 <code>rememberMe</code> Cookie 在处理过程中会进行 <strong>Base64 解码 → AES 解密 → Java 反序列化</strong>。</li>
+<li>因为 AES 密钥是硬编码的（<code>kPH+bIxk5D2deZiIxcaaaA==</code>），攻击者可以使用该密钥伪造一个恶意序列化对象。</li>
+<li>当 Shiro 反序列化该对象时，触发构造好的 Gadget Chain（如 Commons-Collections 利用链），最终导致<strong>任意命令执行</strong>。</li>
+</ol>
+<h2 id="5-Shiro-550-漏洞详解"><a href="#5-Shiro-550-漏洞详解" class="headerlink" title="5. Shiro-550 漏洞详解"></a>5. Shiro-550 漏洞详解</h2><p>Shiro组件（shiro-550）提供了 rememberMe 功能，将 cookie 中 rememberMe 字段内容分别进行<strong>序列化、AES加密、Base64编码</strong>操作，然后用户在请求网站时，Shiro 又会在识别身份的时候，对 cookie 里的 remember 字段反向解密。</p>
+<p><strong>AES 加密的密钥 key 被硬编码在代码里</strong>，导致攻击者可以序列化恶意类，再进行 AES、Base64 编码，传递到服务端进行反序列化执行任意代码。</p>
+<p><img src="https://cdn.nlark.com/yuque/0/2026/png/62398637/1775887937040-51de65ab-3492-48ce-9ba0-f6cf717c41aa.png" alt="Shiro-550攻击流程"></p>
+<h2 id="6-Shiro-721-漏洞详解"><a href="#6-Shiro-721-漏洞详解" class="headerlink" title="6. Shiro-721 漏洞详解"></a>6. Shiro-721 漏洞详解</h2><p><strong>漏洞原理：</strong></p>
+<p>由于 Apache Shiro cookie 中通过 <strong>AES-128-CBC 模式</strong>加密的 rememberMe 字段存在问题，用户可通过 <strong>Padding Oracle</strong> 加密生成的攻击代码来构造恶意的 rememberMe 字段，并重新请求网站，进行反序列化攻击，最终导致任意代码执行。</p>
+<p><strong>影响版本：</strong> Apache Shiro &lt; 1.4.2 版本。</p>
+<h2 id="7-Shiro-550-vs-Shiro-721-对比总结"><a href="#7-Shiro-550-vs-Shiro-721-对比总结" class="headerlink" title="7. Shiro-550 vs Shiro-721 对比总结"></a>7. Shiro-550 vs Shiro-721 对比总结</h2><table>
+<thead>
+<tr>
+<th>特性</th>
+<th>Shiro-550</th>
+<th>Shiro-721</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>漏洞类型</td>
+<td>硬编码密钥导致RCE</td>
+<td>Padding Oracle攻击导致RCE</td>
+</tr>
+<tr>
+<td>利用条件</td>
+<td>AES密钥已知（硬编码）</td>
+<td>需要一个合法用户的RememberMe Cookie</td>
+</tr>
+<tr>
+<td>影响版本</td>
+<td>&lt;&#x3D; 1.2.4</td>
+<td>&lt; 1.4.2</td>
+</tr>
+<tr>
+<td>攻击难度</td>
+<td>低（直接利用）</td>
+<td>中（需要Padding Oracle）</td>
+</tr>
+<tr>
+<td>修复方式</td>
+<td>升级Shiro版本+更换密钥</td>
+<td>升级至1.4.2+</td>
+</tr>
+</tbody></table>
+<h2 id="8-安全建议"><a href="#8-安全建议" class="headerlink" title="8. 安全建议"></a>8. 安全建议</h2><ol>
+<li><strong>升级 Apache Shiro 至最新版本</strong>（1.13.0+）</li>
+<li><strong>更换默认 AES 密钥</strong>，使用随机生成的强密钥</li>
+<li>如果不需要 RememberMe 功能，<strong>禁用该功能</strong></li>
+<li>使用 <strong>安全的序列化方案</strong>（如 JSON、Protobuf 等替代 Java 原生序列化）</li>
+<li>部署 <strong>WAF 规则</strong>检测恶意反序列化 payload</li>
+<li>定期进行<strong>安全审计和依赖检查</strong></li>
+</ol>
+</article><div class="post-copyright"><div class="post-copyright__author"><span class="post-copyright-meta"><i class="fas fa-circle-user fa-fw"></i>文章作者: </span><span class="post-copyright-info"><a href="https://jiege56.github.io">杰哥</a></span></div><div class="post-copyright__type"><span class="post-copyright-meta"><i class="fas fa-square-arrow-up-right fa-fw"></i>文章链接: </span><span class="post-copyright-info"><a href="https://jiege56.github.io/2026/06/30/Shiro%E5%8F%8D%E5%BA%8F%E5%88%97%E5%8C%96%E6%BC%8F%E6%B4%9E%E8%AF%A6%E8%A7%A3/">https://jiege56.github.io/2026/06/30/Shiro%E5%8F%8D%E5%BA%8F%E5%88%97%E5%8C%96%E6%BC%8F%E6%B4%9E%E8%AF%A6%E8%A7%A3/</a></span></div><div class="post-copyright__notice"><span class="post-copyright-meta"><i class="fas fa-circle-exclamation fa-fw"></i>版权声明: </span><span class="post-copyright-info">本博客所有文章除特别声明外，均采用 <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/" target="_blank">CC BY-NC-SA 4.0</a> 许可协议。转载请注明来源 <a href="https://jiege56.github.io" target="_blank">拾憶</a>！</span></div></div><div class="tag_share"><div class="post-meta__tag-list"><a class="post-meta__tags" href="/tags/%E5%AE%89%E5%85%A8%E7%A0%94%E7%A9%B6/">安全研究</a><a class="post-meta__tags" href="/tags/Java%E5%AE%89%E5%85%A8/">Java安全</a><a class="post-meta__tags" href="/tags/%E5%8F%8D%E5%BA%8F%E5%88%97%E5%8C%96/">反序列化</a><a class="post-meta__tags" href="/tags/Shiro/">Shiro</a><a class="post-meta__tags" href="/tags/%E6%BC%8F%E6%B4%9E%E5%88%86%E6%9E%90/">漏洞分析</a></div><div class="post-share"><div class="social-share" data-image="https://s.panlai.com/zb_users/upload/2025/03/bizhihui_com_202503251742906624124197.jpg-arthumbs" data-sites="facebook,x,wechat,weibo,qq"></div><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/butterfly-extsrc@1.1.6/sharejs/dist/css/share.min.css" media="print" onload="this.media='all'"><script src="https://cdn.jsdelivr.net/npm/butterfly-extsrc@1.1.6/sharejs/dist/js/social-share.min.js" defer></script></div></div><nav class="pagination-post" id="pagination"><a class="pagination-related full-width" href="/2025/12/16/hello-world/" title="Hello World"><img class="cover" src="https://s.panlai.com/zb_users/upload/2025/04/bizhihui_com_202504061743931260453893.jpg-pcthumbs" onerror="onerror=null;src='/img/404.jpg'" alt="cover of next post"><div class="info text-right"><div class="info-1"><div class="info-item-1">下一篇</div><div class="info-item-2">Hello World</div></div><div class="info-2"><div class="info-item-1">Welcome to Hexo! This is your very first post. Check documentation for more info. If you get any problems when using Hexo, you can find the answer in troubleshooting or you can ask me on GitHub. Quick StartCreate a new post1$ hexo new &quot;My New Post&quot;  More info: Writing Run server1$ hexo server  More info: Server Generate static files1$ hexo generate  More info: Generating Deploy to remote sites1$ hexo deploy  More info: Deployment </div></div></div></a></nav></div><div class="aside-content" id="aside-content"><div class="card-widget card-info text-center"><div class="avatar-img"><img src="/img/butterfly-icon.png" onerror="this.onerror=null;this.src='/img/friend_404.gif'" alt="avatar"/></div><div class="author-info-name">杰哥</div><div class="author-info-description">人性背后是白云苍狗，愿你我都做生活的高手</div><div class="site-data"><a href="/archives/"><div class="headline">文章</div><div class="length-num">3</div></a><a href="/tags/"><div class="headline">标签</div><div class="length-num">8</div></a><a href="/categories/"><div class="headline">分类</div><div class="length-num">2</div></a></div><a id="card-info-btn" target="_blank" rel="noopener" href="https://github.com/xxxxxx"><i class="fab fa-github"></i><span>Follow Me</span></a></div><div class="card-widget card-announcement"><div class="item-headline"><i class="fas fa-bullhorn fa-shake"></i><span>公告</span></div><div class="announcement_content">This is my Blog</div></div><div class="sticky_layout"><div class="card-widget" id="card-toc"><div class="item-headline"><i class="fas fa-stream"></i><span>目录</span><span class="toc-percentage"></span></div><div class="toc-content"><ol class="toc"><li class="toc-item toc-level-1"><a class="toc-link" href="#%E5%BA%8F%E5%88%97%E5%8C%96"><span class="toc-number">1.</span> <span class="toc-text">序列化</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#1-Shiro%E6%A1%86%E6%9E%B6%E7%9A%84%E5%9F%BA%E6%9C%AC%E5%8A%9F%E8%83%BD%E4%B8%8E%E6%9E%B6%E6%9E%84"><span class="toc-number">1.1.</span> <span class="toc-text">1. Shiro框架的基本功能与架构</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#2-%E6%A0%B8%E5%BF%83%E6%A8%A1%E5%9D%97%E8%AF%A6%E8%A7%A3"><span class="toc-number">1.2.</span> <span class="toc-text">2. 核心模块详解</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#2-1-%E8%AE%A4%E8%AF%81%EF%BC%88Authentication%EF%BC%89"><span class="toc-number">1.2.1.</span> <span class="toc-text">2.1 认证（Authentication）</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#2-2-%E6%8E%88%E6%9D%83%EF%BC%88Authorization%EF%BC%89"><span class="toc-number">1.2.2.</span> <span class="toc-text">2.2 授权（Authorization）</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#2-3-%E5%8A%A0%E5%AF%86%EF%BC%88Cryptography%EF%BC%89"><span class="toc-number">1.2.3.</span> <span class="toc-text">2.3 加密（Cryptography）</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#2-4-%E4%BC%9A%E8%AF%9D%E7%AE%A1%E7%90%86%EF%BC%88Session-Management%EF%BC%89"><span class="toc-number">1.2.4.</span> <span class="toc-text">2.4 会话管理（Session Management）</span></a></li></ol></li></ol></li><li class="toc-item toc-level-1"><a class="toc-link" href="#%E5%8F%8D%E5%BA%8F%E5%88%97%E5%8C%96"><span class="toc-number">2.</span> <span class="toc-text">反序列化</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#3-Shiro%E7%9A%84%E5%8F%8D%E5%BA%8F%E5%88%97%E5%8C%96%E6%9C%BA%E5%88%B6"><span class="toc-number">2.1.</span> <span class="toc-text">3. Shiro的反序列化机制</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#3-1-RememberMe-%E5%8A%9F%E8%83%BD%E7%9A%84%E5%AE%9E%E7%8E%B0%E6%B5%81%E7%A8%8B"><span class="toc-number">2.1.1.</span> <span class="toc-text">3.1 RememberMe 功能的实现流程</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E6%BC%8F%E6%B4%9E%E6%88%90%E5%9B%A0"><span class="toc-number">2.2.</span> <span class="toc-text">漏洞成因</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#4-Shiro%E5%8F%8D%E5%BA%8F%E5%88%97%E5%8C%96%E6%BC%8F%E6%B4%9E%E7%9A%84%E8%A7%A6%E5%8F%91%E6%9D%A1%E4%BB%B6"><span class="toc-number">2.3.</span> <span class="toc-text">4. Shiro反序列化漏洞的触发条件</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#4-1-%E8%A7%A6%E5%8F%91%E7%89%88%E6%9C%AC%E8%8C%83%E5%9B%B4"><span class="toc-number">2.3.1.</span> <span class="toc-text">4.1 触发版本范围</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#4-2-%E6%BC%8F%E6%B4%9E%E5%8E%9F%E7%90%86%E6%80%BB%E7%BB%93"><span class="toc-number">2.3.2.</span> <span class="toc-text">4.2 漏洞原理总结</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#5-Shiro-550-%E6%BC%8F%E6%B4%9E%E8%AF%A6%E8%A7%A3"><span class="toc-number">2.4.</span> <span class="toc-text">5. Shiro-550 漏洞详解</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#6-Shiro-721-%E6%BC%8F%E6%B4%9E%E8%AF%A6%E8%A7%A3"><span class="toc-number">2.5.</span> <span class="toc-text">6. Shiro-721 漏洞详解</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#7-Shiro-550-vs-Shiro-721-%E5%AF%B9%E6%AF%94%E6%80%BB%E7%BB%93"><span class="toc-number">2.6.</span> <span class="toc-text">7. Shiro-550 vs Shiro-721 对比总结</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#8-%E5%AE%89%E5%85%A8%E5%BB%BA%E8%AE%AE"><span class="toc-number">2.7.</span> <span class="toc-text">8. 安全建议</span></a></li></ol></li></ol></div></div><div class="card-widget card-recent-post"><div class="item-headline"><i class="fas fa-history"></i><span>最新文章</span></div><div class="aside-list"><div class="aside-list-item"><a class="thumbnail" href="/2026/06/30/Shiro%E5%8F%8D%E5%BA%8F%E5%88%97%E5%8C%96%E6%BC%8F%E6%B4%9E%E8%AF%A6%E8%A7%A3/" title="Shiro反序列化漏洞详解"><img src="https://s.panlai.com/zb_users/upload/2025/03/bizhihui_com_202503251742906624124197.jpg-arthumbs" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="Shiro反序列化漏洞详解"/></a><div class="content"><a class="title" href="/2026/06/30/Shiro%E5%8F%8D%E5%BA%8F%E5%88%97%E5%8C%96%E6%BC%8F%E6%B4%9E%E8%AF%A6%E8%A7%A3/" title="Shiro反序列化漏洞详解">Shiro反序列化漏洞详解</a><time datetime="2026-06-30T08:00:00.000Z" title="发表于 2026-06-30 16:00:00">2026-06-30</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/2025/12/16/hello-world/" title="Hello World"><img src="https://s.panlai.com/zb_users/upload/2025/04/bizhihui_com_202504061743931260453893.jpg-pcthumbs" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="Hello World"/></a><div class="content"><a class="title" href="/2025/12/16/hello-world/" title="Hello World">Hello World</a><time datetime="2025-12-16T10:05:37.000Z" title="发表于 2025-12-16 18:05:37">2025-12-16</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/2025/12/16/%E6%88%91%E7%9A%84%E7%AC%AC%E4%B8%80%E7%AF%87%E5%8D%9A%E5%AE%A2/" title="我的第一篇博客"><img src="https://s.panlai.com/zb_users/upload/2025/03/bizhihui_com_202503301743321230135180.jpg-armthumbs" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="我的第一篇博客"/></a><div class="content"><a class="title" href="/2025/12/16/%E6%88%91%E7%9A%84%E7%AC%AC%E4%B8%80%E7%AF%87%E5%8D%9A%E5%AE%A2/" title="我的第一篇博客">我的第一篇博客</a><time datetime="2025-12-16T09:21:15.000Z" title="发表于 2025-12-16 17:21:15">2025-12-16</time></div></div></div></div></div></div></main><footer id="footer"><div class="footer-other"><div class="footer-copyright"><span class="copyright">&copy;&nbsp;2025 - 2026 By 杰哥</span><span class="framework-info"><span>框架 </span><a target="_blank" rel="noopener" href="https://hexo.io">Hexo 8.1.2</a><span class="footer-separator">|</span><span>主题 </span><a target="_blank" rel="noopener" href="https://github.com/jerryc127/hexo-theme-butterfly">Butterfly 5.5.5</a></span></div></div></footer></div><div id="rightside"><div id="rightside-config-hide"><button id="readmode" type="button" title="阅读模式"><i class="fas fa-book-open"></i></button><button id="darkmode" type="button" title="日间和夜间模式切换"><i class="fas fa-adjust"></i></button><button id="hide-aside-btn" type="button" title="单栏和双栏切换"><i class="fas fa-arrows-alt-h"></i></button></div><div id="rightside-config-show"><button id="rightside-config" type="button" title="设置"><i class="fas fa-cog fa-spin"></i></button><button class="close" id="mobile-toc-button" type="button" title="目录"><i class="fas fa-list-ul"></i></button><button id="go-up" type="button" title="回到顶部"><span class="scroll-percent"></span><i class="fas fa-arrow-up"></i></button></div></div><div><script src="/js/utils.js?v=5.5.5"></script><script src="/js/main.js?v=5.5.5"></script><div class="js-pjax"></div><script async data-pjax src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script></div></body></html>
