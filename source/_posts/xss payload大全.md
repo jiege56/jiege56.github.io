@@ -1,3 +1,10 @@
+---
+title: XSS Payload 大全
+date: 2026-07-20 12:00:00
+tags: [XSS, Web安全, 渗透测试]
+categories: [安全研究]
+---
+
 ### <font style="color:rgba(0, 0, 0, 0.9);">第一组：XSS 基础分类</font>
 **<font style="color:rgba(0, 0, 0, 0.9);background-color:rgb(245, 245, 245);">表格</font>**
 
